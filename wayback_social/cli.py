@@ -12,6 +12,7 @@ Usage:
 """
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -22,18 +23,34 @@ from .cdx import EmptyResultError, query_cdx, query_many
 from .diff import (DIFF_EXPORT_FIELDS, DIFF_FIELDS, classify_live,
                    diff_exports, diff_records, load_export, summarise)
 from .export import export_all
+from .licence import (SECRET_ENV, SECRET_FILE, load_secret, make_key,
+                      resolve_plan, verify_key)
 from .networks import detect_network, get_network, list_networks
 from .parse import FIELD_OPTIONS, PostsParser
-from .plans import (PLAN_IDS, cap_batch_targets, cap_find_networks,
-                    cap_limit, fetch_text_cap, plan_note)
+from .plans import (PLAN_IDS, PLAN_LABELS, cap_batch_targets,
+                    cap_find_networks, cap_limit, fetch_text_cap, plan_note)
 from .presets import get_preset, list_presets
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 PLAN_OPTION = click.option(
     "--plan", type=click.Choice(PLAN_IDS), default="free", show_default=True,
     help="Licence plan — enforces its caps (free: 25 captures/archive, "
          "3 networks/find, 3 targets/batch, text for 5 posts).")
+
+LICENCE_OPTION = click.option(
+    "--licence", "licence_key", default=None, metavar="KEY",
+    help="Licence key (DP1-...) — verifies it and unlocks that tier's "
+         "caps, overriding --plan. Needs the secret: set "
+         f"{SECRET_ENV} or put it in {SECRET_FILE}.")
+
+
+def _resolve(plan: str, licence_key: str | None) -> tuple[str, str | None]:
+    """Effective plan after --licence; usage error on a bad key."""
+    try:
+        return resolve_plan(plan, licence_key)
+    except ValueError as e:
+        raise click.UsageError(str(e))
 
 LIVE_CHECK_HELP = ("Best-effort live check (experimental): HEAD/GET each post "
                    "URL and mark live / deleted / unknown. A login wall "
@@ -55,6 +72,50 @@ def _parse_date(ctx, param, value):
 @click.version_option(version=VERSION, prog_name="wayback-social")
 def main():
     """Retrieve archived social-media posts from the Wayback Machine."""
+
+
+@main.group("licence")
+def licence_group():
+    """Licence keys: make (dev-only) and check."""
+
+
+@licence_group.command("make")
+@click.option("--tier", type=click.Choice(PLAN_IDS), required=True,
+              help="Tier to mint. A Bundle purchase mints a 'studio' key "
+                   "(bundle caps are Studio-level).")
+@click.option("--email", required=True,
+              help="Buyer email — recorded with the sale, not in the key.")
+def licence_make(tier, email):
+    """Mint a licence key (dev-only — needs the secret in the env)."""
+    secret = os.environ.get(SECRET_ENV)
+    if not secret:
+        raise click.UsageError(
+            f"licence make is dev-only: set {SECRET_ENV} to the minting "
+            "secret first. Never commit a secret; production minting "
+            "happens in a Cloudflare Pages Function (see "
+            "docs/storage-auth-plan.md).")
+    key = make_key(tier, secret)
+    click.echo(f"Licence key for {email} ({tier}):\n{key}")
+    click.echo("Give the buyer the key + this check command: "
+               "wayback-social licence check KEY")
+
+
+@licence_group.command("check")
+@click.argument("key")
+def licence_check(key):
+    """Verify a licence key against the secret; print its tier."""
+    secret = load_secret()
+    if not secret:
+        raise click.UsageError(
+            f"Cannot verify without the secret: set {SECRET_ENV} or put "
+            f"it in {SECRET_FILE}.")
+    valid, tier, reason = verify_key(key, secret)
+    if valid:
+        click.echo(f"Valid licence key — tier: {tier} "
+                   f"({PLAN_LABELS[tier]}).")
+    else:
+        click.echo(f"Invalid licence key: {reason}.")
+        raise SystemExit(1)
 
 
 @main.command("networks")
@@ -98,15 +159,20 @@ def networks_cmd():
 @click.option("--workers", type=int, default=5, help="Parallel fetch workers.")
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @PLAN_OPTION
+@LICENCE_OPTION
 def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
                 to_ts, limit, resumption_key, matchtype, formats, out_dir,
-                fetch_text, live_check, workers, verbose, plan):
+                fetch_text, live_check, workers, verbose, plan, licence_key):
     """Archive NETWORK IDENTIFIER, e.g. `archive x jack`.
 
     NETWORK is one of the ids from `wayback-social networks`
     (x, instagram, facebook, tiktok, youtube, reddit, linkedin,
     threads, bluesky, mastodon, pinterest, tumblr, twitch, medium).
     """
+    plan, licence_note = _resolve(plan, licence_key)
+    if licence_note:
+        click.echo(licence_note)
+
     # --- resolve target -------------------------------------------------
     if post_url:
         net = detect_network(post_url)
@@ -237,8 +303,10 @@ def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
 @click.option("--out-dir", type=click.Path(path_type=Path), default=Path("."))
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @PLAN_OPTION
+@LICENCE_OPTION
 def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
-             limit, only, fetch_text, workers, formats, out_dir, verbose, plan):
+             limit, only, fetch_text, workers, formats, out_dir, verbose,
+             plan, licence_key):
     """Deleted-only diff: which archived posts are gone from the live site.
 
     ``wayback-social diff x jack`` archives the account, checks each
@@ -253,6 +321,10 @@ def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
     "removed", with first/last archived dates.
     """
     import json
+
+    plan, licence_note = _resolve(plan, licence_key)
+    if licence_note:
+        click.echo(licence_note)
 
     # --- export-comparison mode: diff OLD.json NEW.json -------------------
     if network and identifier and Path(network).is_file() and Path(identifier).is_file():
@@ -361,8 +433,9 @@ def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
 @click.option("--out-dir", type=click.Path(path_type=Path), default=Path("."))
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @PLAN_OPTION
+@LICENCE_OPTION
 def find_cmd(identifier, preset_name, networks, keyword, limit, from_ts,
-             to_ts, fetch_text, formats, out_dir, verbose, plan):
+             to_ts, fetch_text, formats, out_dir, verbose, plan, licence_key):
     """Broad search: one handle, every network at once.
 
     ``wayback-social find jack`` checks the same handle on all 14
@@ -373,6 +446,9 @@ def find_cmd(identifier, preset_name, networks, keyword, limit, from_ts,
     """
     import json
 
+    plan, licence_note = _resolve(plan, licence_key)
+    if licence_note:
+        click.echo(licence_note)
     ident = identifier.lstrip("@")
     preset = get_preset(preset_name) if preset_name else None
     if preset_name and not preset:
@@ -471,7 +547,9 @@ def presets_cmd():
               default=["csv", "json"], help="Output format(s) per target.")
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @PLAN_OPTION
-def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose, plan):
+@LICENCE_OPTION
+def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose, plan,
+              licence_key):
     """Archive many accounts at once, one per line in FILE.
 
     Line format: ``NETWORK IDENTIFIER [INSTANCE]`` — e.g.::
@@ -487,6 +565,9 @@ def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose, plan):
     """
     import json
 
+    plan, licence_note = _resolve(plan, licence_key)
+    if licence_note:
+        click.echo(licence_note)
     targets = []
     for raw in file.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
