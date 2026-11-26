@@ -1,0 +1,13 @@
+# Cloudflare Pages config — wayback-social (static site, no build step).
+# Deploy: connect the GitHub repo (ClumsySmurf1337/wayback-social) to
+# Cloudflare Pages; see docs/cloudflare-deploy.md for the exact clicks.
+# Do NOT put secrets here — there are none: the page talks to the
+# public CDX API from the visitor's browser, and checkout links live
+# in web/config.js (REPLACE_* placeholders until Paddle is connected).
+name = "wayback-social"
+compatibility_date = "2026-11-26"
+
+[pages]
+pages_build_output_dir = "web/"
+# No build command: web/ is plain HTML/JS/CSS. If a build step is ever
+# added (e.g. bundling), set pages_build_command here.
