@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wayback-social — Archived posts from every network</title>
+<meta name="description" content="Search the Wayback Machine for archived posts from X, Instagram, TikTok, YouTube, Reddit, Bluesky and more. Free search, Pro Pack $29 one-time.">
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#7c8cff;--accent2:#4ade80;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--accent)}header{max-width:1020px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:42px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:1020px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f1220;color:var(--text);font-size:16px}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.row{grid-template-columns:1fr}h1{font-size:30px}}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:600}
+.btn{background:var(--accent);color:#fff}.btn2{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:wait}
+.pill{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin:2px}
+.pill.good{color:var(--accent2);border-color:var(--accent2)}
+.pill.poor{color:var(--warn);border-color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}td a{word-break:break-all}
+.muted{color:var(--muted);font-size:14px}.stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0}
+.stats b{font-size:22px;display:block}
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:760px){.pricing{grid-template-columns:1fr}}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.plan.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.plan h3{margin:0}.price{font-size:34px;margin:8px 0}.price small{font-size:14px;color:var(--muted)}
+.plan ul{padding-left:18px;color:var(--muted);line-height:1.7}
+.plan button{width:100%;margin-top:10px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:11px;padding:3px 8px;border-radius:99px}
+#notice{color:var(--warn)}footer{max-width:1020px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:420px}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<header>
+  <h1>wayback<span>-social</span></h1>
+  <p class="sub">Archived posts from the Wayback Machine — for <b>every</b> social network, not just Twitter. Search below, or get the Pro Pack and archive whole watchlists at once.</p>
+  <p><span class="pill good">X · Reddit · Bluesky · Mastodon — good archive</span> <span class="pill">Instagram · TikTok · YouTube · Threads — moderate</span> <span class="pill poor">LinkedIn · Pinterest — thin</span></p>
+</header>
+<main>
+  <section class="card" id="search">
+    <h2 style="margin-top:0">Search the archive</h2>
+    <div class="row">
+      <div><label>Network</label><select id="network"></select></div>
+      <div><label>Handle / username (no @)</label><input id="handle" placeholder="jack" value="jack"></div>
+      <div><label>Limit (Free: up to 100)</label><input id="limit" type="number" value="20" min="1" max="1000"></div>
+    </div>
+    <div class="row">
+      <div><label>From (YYYYMMDD, optional)</label><input id="from" placeholder="20200101"></div>
+      <div><label>To (YYYYMMDD, optional)</label><input id="to" placeholder="20231231"></div>
+      <div><label>&nbsp;</label><button class="btn" id="go" style="width:100%">Search archive</button></div>
+    </div>
+    <p style="margin:12px 0 0"><button class="btn2" id="demo">Try a demo search (jack, X)</button>
+    <span class="muted">Live search talks directly to web.archive.org (CDX API). It can take 20–60s — archive.org is slow. No account, nothing is uploaded.</span></p>
+    <p id="status" class="muted"></p>
+    <p id="notice"></p>
+    <div class="stats" id="stats"></div>
+    <div style="overflow-x:auto"><table id="results" hidden><thead><tr><th>Archived</th><th>Post</th><th>Archived snapshot</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    <p id="actions" hidden><button class="btn2" id="csv">Download CSV</button> <button class="btn2" id="json">Download JSON</button></p>
+  </section>
+
+  <section id="pricing">
+    <h2>Pricing — buy the pack, keep it forever</h2>
+    <p class="muted">Free search on this page, forever. The packs are one-time purchases — no subscription. Prices are draft until checkout links are connected (see <code>web/config.js</code>).</p>
+    <div class="pricing" id="plans"></div>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Prefer the command line?</h2>
+    <p class="muted"><code>pipx install wayback-social</code> — then <code>wayback-social archive x jack</code>, <code>wayback-social batch watchlist.txt</code>, and exports to CSV / JSON / JSONL / HTML. Same archive, same fields, offline-friendly.</p>
+    <p><a href="https://github.com/ClumsySmurf1337/wayback-social">github.com/ClumsySmurf1337/wayback-social</a> · GPL-3.0 · Based on <a href="https://github.com/claromes/waybacktweets">waybacktweets</a> (Twitter-only)</p>
+    <p class="muted">Honest limits: Wayback archiving is uneven by network, and post URLs that don't contain the username (YouTube watch URLs, Instagram /p/ codes, Pinterest pins) can't be listed per-user — use a single post URL in the CLI with <code>--url</code>. Deleted posts keep their archived snapshot link.</p>
+  </section>
+</main>
+<footer>wayback-social · Research / OSINT tool. Respect robots, terms of service and people's privacy.</footer>
+
+<dialog id="dlg"><h3 id="dlgTitle" style="margin-top:0"></h3><p id="dlgBody" class="muted"></p><button class="btn" onclick="document.getElementById('dlg').close()">Close</button></dialog>
+
+<script src="config.js"></script>
+<script>
+const NETWORKS = {
+  x:{name:"X / Twitter",patterns:["https://twitter.com/{id}/status/*","https://x.com/{id}/status/*"],coverage:"good"},
+  instagram:{name:"Instagram",patterns:["https://www.instagram.com/{id}/p/*","https://www.instagram.com/{id}/reel/*","https://www.instagram.com/{id}/*"],coverage:"moderate"},
+  facebook:{name:"Facebook",patterns:["https://www.facebook.com/{id}/posts/*","https://www.facebook.com/{id}/*"],coverage:"moderate"},
+  tiktok:{name:"TikTok",patterns:["https://www.tiktok.com/@{id}/video/*"],coverage:"moderate"},
+  youtube:{name:"YouTube",patterns:["https://www.youtube.com/@{id}/*","https://www.youtube.com/channel/{id}/*"],coverage:"moderate"},
+  reddit:{name:"Reddit",patterns:["https://www.reddit.com/user/{id}/*"],coverage:"good"},
+  linkedin:{name:"LinkedIn",patterns:["https://www.linkedin.com/in/{id}/*"],coverage:"poor"},
+  threads:{name:"Threads",patterns:["https://www.threads.net/@{id}/post/*","https://www.threads.net/@{id}/*"],coverage:"moderate"},
+  bluesky:{name:"Bluesky",patterns:["https://bsky.app/profile/{id}/post/*"],coverage:"good"},
+  mastodon:{name:"Mastodon",patterns:["https://mastodon.social/@{id}/*"],coverage:"good"},
+  pinterest:{name:"Pinterest",patterns:["https://www.pinterest.com/{id}/*"],coverage:"poor"},
+  tumblr:{name:"Tumblr",patterns:["https://{id}.tumblr.com/post/*"],coverage:"moderate"},
+  twitch:{name:"Twitch",patterns:["https://www.twitch.tv/{id}/*"],coverage:"moderate"},
+  medium:{name:"Medium",patterns:["https://medium.com/@{id}/*"],coverage:"poor"},
+};
+const cfg = window.WAYBACK_SOCIAL_CONFIG;
+const $ = id => document.getElementById(id);
+const sel = $("network");
+for (const [id,n] of Object.entries(NETWORKS)) {
+  const o = document.createElement("option"); o.value=id; o.textContent=`${n.name} — ${n.coverage} archive`; sel.appendChild(o);
+}
+let lastRows = [];
+function showDlg(t,b){ $("dlgTitle").textContent=t; $("dlgBody").textContent=b; $("dlg").showModal(); }
+// Checkout is swappable: ?checkout=lemon|stripe|gumroad|email, or
+// ?ab=lemon-stripe splits visitors 50/50 (stored per session).
+function activeProvider(){
+  const q = new URLSearchParams(location.search);
+  const want = q.get("checkout");
+  if (want && cfg.CHECKOUT.links[want]) return want;
+  const ab = q.get("ab");
+  if (ab) {
+    const [a,b] = ab.split("-");
+    if (cfg.CHECKOUT.links[a] && cfg.CHECKOUT.links[b]) {
+      let pick = sessionStorage.getItem("ws-ab");
+      if (!pick) { pick = Math.random() < 0.5 ? a : b; sessionStorage.setItem("ws-ab", pick); }
+      return pick;
+    }
+  }
+  return cfg.CHECKOUT.provider;
+}
+const PROVIDER_LABEL = { paddle:"Paddle", stripe:"Stripe", gumroad:"Gumroad", email:"Email order", lemon:"Lemon Squeezy (closed — do not use)" };
+function renderPlans(){
+  const prov = activeProvider();
+  $("plans").innerHTML = cfg.PRICING.map(p=>`<div class="plan ${p.featured?"featured":""}">
+    ${p.featured?'<span class="badge">RECOMMENDED</span>':""}
+    <h3>${p.name}</h3><div class="price">${p.price} <small>${p.cadence}</small></div>
+    <p class="muted">${p.blurb}</p><ul>${p.features.map(f=>`<li>${f}</li>`).join("")}</ul>
+    <button class="btn" data-plan="${p.id}">${p.cta}</button></div>`).join("");
+  const note = document.createElement("p");
+  note.className = "muted";
+  note.innerHTML = `Checkout: <b>${PROVIDER_LABEL[prov]||prov}</b> · Secure checkout opens in a new tab. Seller test: add <code>?checkout=stripe</code> (or lemon / gumroad / email) or <code>?ab=lemon-stripe</code> to swap providers.`;
+  $("plans").after(note);
+  document.querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>{
+    const p=cfg.PRICING.find(x=>x.id===b.dataset.plan);
+    if(!p.checkout){ showDlg("Free — you're already in","No payment needed. Use the search above, or install the CLI: pipx install wayback-social"); return; }
+    const link = cfg.CHECKOUT.links[prov] && cfg.CHECKOUT.links[prov][p.checkout];
+    if(!link || link.includes("REPLACE")){ showDlg("Checkout not connected yet",`${p.name} (${p.price} ${p.cadence}) via ${PROVIDER_LABEL[prov]||prov} — the checkout link isn't connected yet. The seller replaces the REPLACE_* link in web/config.js, then this button goes straight to secure checkout.`); return; }
+    window.open(link,"_blank");
+  });
+}
+renderPlans();
+function renderRows(rows){
+  lastRows = rows;
+  const tb = document.querySelector("#results tbody"); tb.innerHTML="";
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    const ts=r[1], orig=r[2];
+    tr.innerHTML=`<td>${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)} ${ts.slice(8,10)}:${ts.slice(10,12)}</td>
+    <td><a href="${orig}" target="_blank" rel="noopener">${orig}</a></td>
+    <td><a href="https://web.archive.org/web/${ts}/${orig}" target="_blank" rel="noopener">web.archive.org/web/${ts}/…</a></td>
+    <td>${r[4]||""} · ${r[3]||""}</td>`;
+    tb.appendChild(tr);
+  });
+  $("results").hidden = !rows.length;
+  $("actions").hidden = !rows.length;
+  const dates = rows.map(r=>r[1]).sort();
+  $("stats").innerHTML = rows.length ? `<div><b>${rows.length}</b>captures</div><div><b>${dates[0].slice(0,4)}</b>earliest</div><div><b>${dates[dates.length-1].slice(0,4)}</b>latest</div>` : "";
+}
+async function search(demo){
+  const net = demo?"x":sel.value, id=(demo?"jack":$("handle").value.trim().replace(/^@/,""))||"jack";
+  const limit = Math.min(parseInt($("limit").value)||20, 1000);
+  const from=$("from").value.trim(), to=$("to").value.trim();
+  $("go").disabled=true; $("status").textContent="Searching the Wayback Machine — this can take 20–60s…"; $("notice").textContent="";
+  const seen=new Set(); let rows=[];
+  try{
+    for(const pat of NETWORKS[net].patterns){
+      const url = new URL(cfg.CDX_BASE);
+      url.searchParams.set("url", pat.replace("{id}",id));
+      url.searchParams.set("output","json"); url.searchParams.set("limit",String(limit));
+      url.searchParams.set("showResumeKey","true");
+      if(from) url.searchParams.set("from",from); if(to) url.searchParams.set("to",to);
+      const res = await fetch(url.toString());
+      if(!res.ok) continue;
+      const data = await res.json();
+      for(const r of (data||[]).slice(1)){
+        if(r.length<7) continue;
+        const k=r[1]+"|"+r[2]; if(!seen.has(k)){seen.add(k); rows.push(r);}
+      }
+      if(rows.length>=limit) break;
+    }
+    rows.sort((a,b)=>a[1].localeCompare(b[1]));
+    if(!rows.length){ $("status").textContent="No captures found for that handle on this network. Try a wider date range, or check the spelling — some networks are barely archived."; }
+    else $("status").textContent=`Found ${rows.length} capture(s) for @${id} on ${NETWORKS[net].name}.`;
+    renderRows(rows.slice(0,limit));
+  }catch(e){
+    $("status").textContent="Live search failed (archive.org may block browser requests / CORS).";
+    $("notice").textContent="Fallback: use the CLI — wayback-social archive "+net+" "+id+" --limit "+limit+" — it talks to the same CDX API without browser limits. Or try the demo below.";
+    // Demo data so the page still shows what results look like.
+    renderRows([["com,twitter)/jack/status/20","20060321212430","https://twitter.com/jack/status/20","text/html","200","ABC","1"]]);
+  }finally{ $("go").disabled=false; }
+}
+$("go").onclick=()=>search(false);
+$("demo").onclick=()=>search(true);
+function download(name, text, type){
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click();
+}
+$("csv").onclick=()=>{
+  const head="network,identifier,archived_timestamp,original_post_url,archived_post_url,archived_statuscode,archived_mimetype\n";
+  const body=lastRows.map(r=>[sel.value,$("handle").value,r[1],r[2],`https://web.archive.org/web/${r[1]}/${r[2]}`,r[4],r[3]].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  download("wayback-social.csv", head+body, "text/csv");
+};
+$("json").onclick=()=>{
+  download("wayback-social.json", JSON.stringify(lastRows.map(r=>({network:sel.value,identifier:$("handle").value,archived_timestamp:r[1],original_post_url:r[2],archived_post_url:`https://web.archive.org/web/${r[1]}/${r[2]}`,archived_statuscode:r[4],archived_mimetype:r[3]})),null,2), "application/json");
+};
+</script>
+</body>
+</html>
