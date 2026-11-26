@@ -1,0 +1,11 @@
+# Cloudflare Pages headers — security + caching for the static app.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://web.archive.org https://archive.org; img-src 'self' data:; frame-ancestors 'none'
+  Cache-Control: public, max-age=3600
+
+/config.js
+  Cache-Control: public, max-age=300

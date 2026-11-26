@@ -3,8 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>wayback-social — Archived posts from every network</title>
-<meta name="description" content="Search the Wayback Machine for archived posts from X, Instagram, TikTok, YouTube, Reddit, Bluesky and more. Free search, Pro Pack $29 one-time.">
+<title>wayback-social — Find deleted tweets & posts in the Wayback Machine</title>
+<meta name="description" content="Search the Wayback Machine for archived posts from X, Instagram, TikTok, YouTube, Reddit, Bluesky and more. Find deleted tweets — Pro $19 one-time.">
+<meta name="keywords" content="wayback machine social media search, find deleted tweets, deleted instagram posts archive, catfish check archived posts, deleted posts archive, wayback machine search, archived tweets">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://wayback-social.pages.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="wayback-social">
+<meta property="og:title" content="wayback-social — Find deleted posts in the Wayback Machine">
+<meta property="og:description" content="Archived posts from 14 networks. Deleted-only diff, batch mode, CSV/JSON/HTML export. Free search; one-time packs from $9.">
+<meta property="og:url" content="https://wayback-social.pages.dev/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="wayback-social — Find deleted posts in the Wayback Machine">
+<meta name="twitter:description" content="Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more. Free search; Pro $19 one-time (launch).">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"wayback-social","applicationCategory":"UtilitiesApplication","operatingSystem":"Web, Windows, macOS, Linux","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"9","priceCurrency":"USD","name":"Starter"},{"@type":"Offer","price":"19","priceCurrency":"USD","name":"Pro Pack"},{"@type":"Offer","price":"49","priceCurrency":"USD","name":"Studio"},{"@type":"Offer","price":"59","priceCurrency":"USD","name":"All-in Bundle"}],"description":"Search the Wayback Machine for archived social media posts from 14 networks, find deleted posts, and export evidence packs."}
+</script>
 <style>
 :root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#7c8cff;--accent2:#4ade80;--warn:#fbbf24}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
@@ -27,7 +41,8 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px
 th{color:var(--muted)}td a{word-break:break-all}
 .muted{color:var(--muted);font-size:14px}.stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0}
 .stats b{font-size:22px;display:block}
-.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.strike{color:var(--muted);text-decoration:line-through;font-size:18px;margin-right:6px}
 @media(max-width:760px){.pricing{grid-template-columns:1fr}}
 .plan{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
 .plan.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
@@ -52,7 +67,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="row">
       <div><label>Network</label><select id="network"></select></div>
       <div><label>Handle / username (no @)</label><input id="handle" placeholder="jack" value="jack"></div>
-      <div><label>Limit (Free: up to 100)</label><input id="limit" type="number" value="20" min="1" max="1000"></div>
+      <div><label>Limit (Free: up to 25)</label><input id="limit" type="number" value="20" min="1" max="1000"></div>
     </div>
     <div class="row">
       <div><label>From (YYYYMMDD, optional)</label><input id="from" placeholder="20200101"></div>
@@ -70,7 +85,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
   <section id="pricing">
     <h2>Pricing — buy the pack, keep it forever</h2>
-    <p class="muted">Free search on this page, forever. The packs are one-time purchases — no subscription. Prices are draft until checkout links are connected (see <code>web/config.js</code>).</p>
+    <p class="muted">Free search on this page, forever (25 captures per search). The packs are one-time purchases — no subscription. Cheaper than the rivals: Social Catfish is $27.48/mo, Spokeo $19.95/mo, Hunchly $169/yr — our Pro launch pack is $19 <b>once</b>. Prices are draft until checkout links are connected (see <code>web/config.js</code>).</p>
     <div class="pricing" id="plans"></div>
   </section>
 
@@ -111,8 +126,9 @@ for (const [id,n] of Object.entries(NETWORKS)) {
 }
 let lastRows = [];
 function showDlg(t,b){ $("dlgTitle").textContent=t; $("dlgBody").textContent=b; $("dlg").showModal(); }
-// Checkout is swappable: ?checkout=lemon|stripe|gumroad|email, or
-// ?ab=lemon-stripe splits visitors 50/50 (stored per session).
+// Checkout is swappable: ?checkout=paddle|stripe|gumroad|email, or
+// ?ab=paddle-stripe splits visitors 50/50 (stored per session).
+// Lemon Squeezy is closed (16 Nov 2026) — never a provider here.
 function activeProvider(){
   const q = new URLSearchParams(location.search);
   const want = q.get("checkout");
@@ -133,12 +149,12 @@ function renderPlans(){
   const prov = activeProvider();
   $("plans").innerHTML = cfg.PRICING.map(p=>`<div class="plan ${p.featured?"featured":""}">
     ${p.featured?'<span class="badge">RECOMMENDED</span>':""}
-    <h3>${p.name}</h3><div class="price">${p.price} <small>${p.cadence}</small></div>
+    <h3>${p.name}</h3><div class="price">${p.regular?`<span class="strike">${p.regular}</span>`:""}${p.price} <small>${p.cadence}</small></div>
     <p class="muted">${p.blurb}</p><ul>${p.features.map(f=>`<li>${f}</li>`).join("")}</ul>
     <button class="btn" data-plan="${p.id}">${p.cta}</button></div>`).join("");
   const note = document.createElement("p");
   note.className = "muted";
-  note.innerHTML = `Checkout: <b>${PROVIDER_LABEL[prov]||prov}</b> · Secure checkout opens in a new tab. Seller test: add <code>?checkout=stripe</code> (or lemon / gumroad / email) or <code>?ab=lemon-stripe</code> to swap providers.`;
+  note.innerHTML = `Checkout: <b>${PROVIDER_LABEL[prov]||prov}</b> · Secure checkout opens in a new tab. Seller test: add <code>?checkout=stripe</code> (or paddle / gumroad / email) or <code>?ab=paddle-stripe</code> to swap providers.`;
   $("plans").after(note);
   document.querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>{
     const p=cfg.PRICING.find(x=>x.id===b.dataset.plan);
@@ -168,7 +184,7 @@ function renderRows(rows){
 }
 async function search(demo){
   const net = demo?"x":sel.value, id=(demo?"jack":$("handle").value.trim().replace(/^@/,""))||"jack";
-  const limit = Math.min(parseInt($("limit").value)||20, 1000);
+  const limit = Math.min(parseInt($("limit").value)||20, 25); // web = Free tier cap
   const from=$("from").value.trim(), to=$("to").value.trim();
   $("go").disabled=true; $("status").textContent="Searching the Wayback Machine — this can take 20–60s…"; $("notice").textContent="";
   const seen=new Set(); let rows=[];

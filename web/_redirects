@@ -1,0 +1,8 @@
+# Subdomain-ready shortcuts. Real subdomains (verify./osint./legal./app.)
+# need DNS records in the Cloudflare dashboard — see docs/cloudflare-deploy.md.
+# Until then these paths land on the matching in-page section.
+/verify  /#presets  302
+/osint   /#presets  302
+/legal   /#presets  302
+/app     /#search   302
+/pricing /#pricing  302

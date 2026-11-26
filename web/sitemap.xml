@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single-page app: one real URL. The in-page sections (#search,
+     #presets, #pricing) are anchors, not separate pages, so they are
+     not listed as URLs here. Add a URL per page when preset landing
+     pages become real files (see docs/seo-plan.md). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://wayback-social.pages.dev/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
