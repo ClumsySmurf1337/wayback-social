@@ -19,13 +19,27 @@ import click
 from rich import print as rprint
 
 from .cdx import EmptyResultError, query_cdx, query_many
-from .diff import DIFF_FIELDS, diff_records, summarise
+from .diff import (DIFF_EXPORT_FIELDS, DIFF_FIELDS, classify_live,
+                   diff_exports, diff_records, load_export, summarise)
 from .export import export_all
 from .networks import detect_network, get_network, list_networks
 from .parse import FIELD_OPTIONS, PostsParser
+from .plans import (PLAN_IDS, cap_batch_targets, cap_find_networks,
+                    cap_limit, fetch_text_cap, plan_note)
 from .presets import get_preset, list_presets
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
+
+PLAN_OPTION = click.option(
+    "--plan", type=click.Choice(PLAN_IDS), default="free", show_default=True,
+    help="Licence plan — enforces its caps (free: 25 captures/archive, "
+         "3 networks/find, 3 targets/batch, text for 5 posts).")
+
+LIVE_CHECK_HELP = ("Best-effort live check (experimental): HEAD/GET each post "
+                   "URL and mark live / deleted / unknown. A login wall "
+                   "(Instagram, Facebook, TikTok, LinkedIn) is 'unknown', "
+                   "never 'deleted' — only 404/410, or X oEmbed 404, counts "
+                   "as deleted.")
 
 
 def _parse_date(ctx, param, value):
@@ -80,11 +94,13 @@ def networks_cmd():
 @click.option("--fetch-text/--no-fetch-text", default=True,
               help="Try oEmbed / archived snapshot for post text (default: on). "
                    "--no-fetch-text is much faster and CDX-only.")
+@click.option("--live-check", is_flag=True, default=False, help=LIVE_CHECK_HELP)
 @click.option("--workers", type=int, default=5, help="Parallel fetch workers.")
 @click.option("-v", "--verbose", is_flag=True, default=False)
+@PLAN_OPTION
 def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
                 to_ts, limit, resumption_key, matchtype, formats, out_dir,
-                fetch_text, workers, verbose):
+                fetch_text, live_check, workers, verbose, plan):
     """Archive NETWORK IDENTIFIER, e.g. `archive x jack`.
 
     NETWORK is one of the ids from `wayback-social networks`
@@ -119,6 +135,13 @@ def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
             rprint(f"Network: [cyan]{net.id}[/cyan] ({net.name})  coverage: {net.coverage}")
             rprint(f"Note: {net.notes}")
 
+    # --- plan caps -------------------------------------------------------
+    click.echo(plan_note(plan))
+    limit, clamped = cap_limit(plan, limit)
+    if clamped:
+        click.echo(f"Note: --limit capped to {limit} on the {plan} plan "
+                   f"(upgrade with --plan pro / studio).")
+
     # --- CDX -------------------------------------------------------------
     click.echo("Retrieving from Wayback CDX… (archive.org can be slow; "
                "use --limit / --no-fetch-text if it stalls)")
@@ -140,6 +163,10 @@ def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
     total = len(parser.rows)
     click.echo(f"Found {total} capture(s). Parsing…")
     if fetch_text:
+        fcap = fetch_text_cap(plan)
+        if total > fcap:
+            click.echo(f"Note: text fetch capped to the first {fcap} post(s) "
+                       f"on the {plan} plan.")
         done = [0]
 
         def _tick():
@@ -147,11 +174,33 @@ def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
             if done[0] % 20 == 0:
                 click.echo(f"  fetched text for {done[0]}/{total}…")
 
-        records = parser.parse(fetch_text=True, workers=workers, progress=_tick)
+        records = parser.parse(fetch_text=True, workers=workers, progress=_tick,
+                               fetch_cap=fcap)
     else:
         records = parser.parse(fetch_text=False)
     with_text = sum(1 for r in records if r.get("available_post_text"))
     click.echo(f"Parsed {len(records)} post(s); text recovered for {with_text}.")
+
+    # --- live check (experimental, best-effort) ---------------------------
+    export_fields = None
+    if live_check:
+        click.echo("Live-checking each post (unknown = login wall / error, "
+                   "never counted as deleted)…")
+        live_fields = ["live_verdict", "live_http_status", "live_final_url",
+                       "live_checked_at"]
+        for r in records:
+            if not r.get("post_id"):
+                # Listing/profile rows are not posts; don't live-check them.
+                r.update({"live_verdict": "not-a-post", "live_http_status": "",
+                          "live_final_url": r["original_post_url"],
+                          "live_checked_at": ""})
+                continue
+            info = classify_live(r["original_post_url"], net.id)
+            r.update(info)
+        counts = summarise(records)
+        click.echo(f"Live: {counts['live']}, deleted {counts['deleted']}, "
+                   f"unknown {counts['unknown']} (of {counts['total_posts']}).")
+        export_fields = FIELD_OPTIONS + live_fields
 
     # --- export -----------------------------------------------------------
     fmts = ["csv", "json", "jsonl", "html"] if "all" in formats else list(formats)
@@ -159,7 +208,8 @@ def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
     file_ident = ident
     if post_url:
         file_ident = net.post_id(post_url) or records[0].get("post_id") or "post"
-    saved = export_all(records, net.id, file_ident, out_dir, fmts)
+    saved = export_all(records, net.id, file_ident, out_dir, fmts,
+                       fields=export_fields)
     for p in saved:
         click.echo(f"Saved to {p}")
     if resume:
@@ -186,8 +236,9 @@ def archive_cmd(network, identifier, post_url, instance, collapse, from_ts,
               default=["csv", "json"], help="Output format(s).")
 @click.option("--out-dir", type=click.Path(path_type=Path), default=Path("."))
 @click.option("-v", "--verbose", is_flag=True, default=False)
+@PLAN_OPTION
 def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
-             limit, only, fetch_text, workers, formats, out_dir, verbose):
+             limit, only, fetch_text, workers, formats, out_dir, verbose, plan):
     """Deleted-only diff: which archived posts are gone from the live site.
 
     ``wayback-social diff x jack`` archives the account, checks each
@@ -196,8 +247,38 @@ def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
     counted as deleted. Every row keeps its Wayback snapshot link, so
     a deleted post is still viewable. ``--only deleted`` exports just
     the gone posts: the evidence pack.
+
+    ``wayback-social diff OLD.json NEW.json`` compares two exports
+    instead (no network): posts in OLD but missing from NEW are
+    "removed", with first/last archived dates.
     """
     import json
+
+    # --- export-comparison mode: diff OLD.json NEW.json -------------------
+    if network and identifier and Path(network).is_file() and Path(identifier).is_file():
+        try:
+            old_recs = load_export(network)
+            new_recs = load_export(identifier)
+        except ValueError as e:
+            raise click.UsageError(str(e))
+        result = diff_exports(old_recs, new_recs)
+        click.echo(f"Compared {len(old_recs)} (old) vs {len(new_recs)} (new) rows: "
+                   f"removed {result['removed']}, added {result['added']}, "
+                   f"kept {result['kept']}.")
+        for r in result["removed_rows"]:
+            click.echo(f"  removed: {r['first_archived_timestamp']}–"
+                       f"{r['last_archived_timestamp']} {r['original_post_url']}")
+        # --only deleted (live-diff vocabulary) means "removed" here.
+        kept = {"all": result["removed_rows"] + result["added_rows"] + result["kept_rows"],
+                "removed": result["removed_rows"], "deleted": result["removed_rows"],
+                "added": result["added_rows"],
+                "kept": result["kept_rows"]}.get(only, result["removed_rows"])
+        fmts = ["csv", "json", "jsonl", "html"] if "all" in formats else list(formats)
+        saved = export_all(kept, "diff", "exports", out_dir, fmts,
+                           fields=DIFF_EXPORT_FIELDS)
+        for p in saved:
+            click.echo(f"Saved to {p}")
+        return
 
     if post_url:
         net = detect_network(post_url)
@@ -213,6 +294,10 @@ def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
             raise click.UsageError(f"Unknown network '{network}'.")
         ident = identifier.lstrip("@")
         patterns = net.cdx_urls(ident, instance or "mastodon.social")
+    click.echo(plan_note(plan))
+    limit, clamped = cap_limit(plan, limit)
+    if clamped:
+        click.echo(f"Note: --limit capped to {limit} on the {plan} plan.")
     click.echo("Retrieving from Wayback CDX…")
     try:
         rows, resume = query_many(patterns, limit=limit, from_ts=from_ts,
@@ -222,7 +307,8 @@ def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
         raise SystemExit(1)
     records = PostsParser(rows, net, ident, FIELD_OPTIONS,
                           resumption_key=resume).parse(fetch_text=fetch_text,
-                                                      workers=workers)
+                                                      workers=workers,
+                                                      fetch_cap=fetch_text_cap(plan))
     click.echo(f"Archived {len(records)} capture(s); checking each post live…")
     diffed, skipped = diff_records(records, net.id, workers=workers,
                                    require_post_id=not bool(post_url))
@@ -274,8 +360,9 @@ def diff_cmd(network, identifier, post_url, instance, from_ts, to_ts,
               default=["json"], help="Output format(s).")
 @click.option("--out-dir", type=click.Path(path_type=Path), default=Path("."))
 @click.option("-v", "--verbose", is_flag=True, default=False)
+@PLAN_OPTION
 def find_cmd(identifier, preset_name, networks, keyword, limit, from_ts,
-             to_ts, fetch_text, formats, out_dir, verbose):
+             to_ts, fetch_text, formats, out_dir, verbose, plan):
     """Broad search: one handle, every network at once.
 
     ``wayback-social find jack`` checks the same handle on all 14
@@ -291,6 +378,7 @@ def find_cmd(identifier, preset_name, networks, keyword, limit, from_ts,
     if preset_name and not preset:
         raise click.UsageError(
             f"Unknown preset '{preset_name}'. Run `wayback-social presets` to list them.")
+    click.echo(plan_note(plan))
     if networks:
         nets = [get_network(n) for n in networks.split(",")]
         if any(n is None for n in nets):
@@ -299,6 +387,14 @@ def find_cmd(identifier, preset_name, networks, keyword, limit, from_ts,
         nets = [get_network(n) for n in preset.networks]
     else:
         nets = list_networks()
+    kept_n, net_clamped = cap_find_networks(plan, len(nets))
+    if net_clamped:
+        click.echo(f"Note: find capped to {kept_n} networks on the {plan} plan "
+                   f"({len(nets)} requested).")
+        nets = nets[:kept_n]
+    limit, lim_clamped = cap_limit(plan, limit)
+    if lim_clamped:
+        click.echo(f"Note: --limit capped to {limit} per network on the {plan} plan.")
     if keyword and not fetch_text:
         click.echo("Note: --keyword needs --fetch-text to see post text; enabling it.")
         fetch_text = True
@@ -325,13 +421,16 @@ def find_cmd(identifier, preset_name, networks, keyword, limit, from_ts,
             found.append({"network": net.id, "identifier": ident, "captures": 0})
             continue
         records = PostsParser(rows, net, ident, FIELD_OPTIONS,
-                              resumption_key=resume).parse(fetch_text=fetch_text)
+                              resumption_key=resume).parse(
+                                  fetch_text=fetch_text,
+                                  fetch_cap=fetch_text_cap(plan))
         if keyword:
             kw = keyword.lower()
             records = [r for r in records
                        if kw in " ".join(str(r.get(f) or "") for f in
                                          ("available_post_text", "available_post_title",
                                           "original_post_url")).lower()]
+    # fetch_text cap applies to find too (parse call above uses it).
         click.echo(f"  {net.id}: {len(records)} capture(s)"
                    + (f" matching {keyword!r}" if keyword else ""))
         if records:
@@ -371,7 +470,8 @@ def presets_cmd():
               type=click.Choice(["csv", "json", "jsonl", "html", "all"]),
               default=["csv", "json"], help="Output format(s) per target.")
 @click.option("-v", "--verbose", is_flag=True, default=False)
-def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose):
+@PLAN_OPTION
+def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose, plan):
     """Archive many accounts at once, one per line in FILE.
 
     Line format: ``NETWORK IDENTIFIER [INSTANCE]`` — e.g.::
@@ -405,6 +505,16 @@ def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose):
     if not targets:
         raise click.UsageError("No valid targets in file.")
 
+    click.echo(plan_note(plan))
+    kept_t, t_clamped = cap_batch_targets(plan, len(targets))
+    if t_clamped:
+        click.echo(f"Note: batch capped to the first {kept_t} target(s) "
+                   f"on the {plan} plan ({len(targets)} in file).")
+        targets = targets[:kept_t]
+    limit, lim_clamped = cap_limit(plan, limit)
+    if lim_clamped:
+        click.echo(f"Note: --limit capped to {limit} per target on the {plan} plan.")
+
     fmts = ["csv", "json", "jsonl", "html"] if "all" in formats else list(formats)
     summary = []
     for net, ident, instance in targets:
@@ -421,7 +531,9 @@ def batch_cmd(file, out_dir, limit, fetch_text, formats, verbose):
                             "captures": 0, "error": str(e)})
             continue
         records = PostsParser(rows, net, ident, FIELD_OPTIONS,
-                              resumption_key=resume).parse(fetch_text=fetch_text)
+                              resumption_key=resume).parse(
+                                  fetch_text=fetch_text,
+                                  fetch_cap=fetch_text_cap(plan))
         saved = export_all(records, net.id, ident, out_dir, fmts)
         for p in saved:
             click.echo(f"  Saved to {p}")

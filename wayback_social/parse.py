@@ -22,7 +22,18 @@ FIELD_OPTIONS = [
     "available_post_is_repost",
     "archived_mimetype", "archived_statuscode", "archived_digest",
     "archived_length", "resumption_key",
+    # Fallback archives (competition top-8 #4): one click to check the
+    # two archives that cover what Wayback misses (JS-heavy posts, video).
+    "fallback_archive_today_url", "fallback_ghostarchive_url",
 ]
+
+
+def fallback_links(original_url: str) -> tuple[str, str]:
+    """archive.today + Ghostarchive links for one original post URL."""
+    today = f"https://archive.today/newest/{original_url}"
+    ghost = ("https://ghostarchive.org/search?term="
+             + quote(original_url, safe=""))
+    return today, ghost
 
 
 def timestamp_parser(ts: str) -> str:
@@ -73,7 +84,10 @@ class PostsParser:
         original = _clean_url(original)
         archived = _wayback_url(ts, original)
         post_id = self.network.post_id(original) if self.network else None
+        today, ghost = fallback_links(original)
         rec = {
+            "fallback_archive_today_url": today,
+            "fallback_ghostarchive_url": ghost,
             "network": self.network.id if self.network else "",
             "identifier": self.identifier,
             "post_id": post_id or "",
@@ -97,15 +111,17 @@ class PostsParser:
         return rec
 
     def parse(self, fetch_text: bool = False, workers: int = 5,
-              progress=None) -> list[dict]:
+              progress=None, fetch_cap: int | None = None) -> list[dict]:
         self.records = [r for r in (self._process(row) for row in self.rows) if r]
         if fetch_text and self.records:
-            self._enrich(workers, progress)
+            self._enrich(workers, progress, fetch_cap=fetch_cap)
         # Chronological, then by post id for stable output.
         self.records.sort(key=lambda r: (r["archived_timestamp"], r["post_id"]))
         return self.records
 
-    def _enrich(self, workers: int, progress):
+    def _enrich(self, workers: int, progress, fetch_cap: int | None = None):
+        targets = self.records[:fetch_cap] if fetch_cap else self.records
+
         def _one(rec):
             raw_id = f"{rec['archived_timestamp']}id_/{rec['original_post_url']}"
             snapshot = f"https://web.archive.org/web/{raw_id}"
@@ -121,7 +137,7 @@ class PostsParser:
             return rec
 
         with ThreadPoolExecutor(max_workers=workers) as ex:
-            futs = {ex.submit(_one, r): r for r in self.records}
+            futs = {ex.submit(_one, r): r for r in targets}
             for fut in as_completed(futs):
                 try:
                     fut.result()
