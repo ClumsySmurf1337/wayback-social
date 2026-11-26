@@ -76,43 +76,108 @@ no server needed.
 # GitHub Pages from this repo: Settings → Pages → deploy from /web
 ```
 
-Pricing is **draft** and lives in one place, `web/config.js`
-(`PRICING` + `CHECKOUT_LINKS` — Stripe Payment Links). Until real
-links replace the `REPLACE_*` placeholders, Buy buttons explain that
-checkout isn't connected yet instead of taking money.
+Pricing lives in one place, **`pricing.yaml`** — the single source
+of truth. To change a price or a cap, edit that file and run
+`python scripts/sync_pricing.py`, which regenerates
+`wayback_social/plans.py` and `web/config.js` (and fails loudly with
+`--check` if they drift). Until real links replace the `REPLACE_*`
+placeholders in `web/config.js`, Buy buttons explain that checkout
+isn't connected yet instead of taking money.
 
-| Pack | Price | What's in it |
-|---|---|---|
-| Free | $0 forever | 25 captures/search, 3 networks per broad search, 3 targets/batch, text for 5 posts, CSV export |
-| Starter | $9 one-time | 250 captures/search, 7 networks, 10 targets/batch, text for 100 posts, all export formats |
-| **Pro Pack** | **$19 one-time (launch, reg. $29)** | 2,500 captures/search, all 14 networks, 50 targets/batch, deleted-only diff + live check, text for 1,000 posts |
-| Studio | $49 one-time (launch, reg. $99) | 25,000 captures/search, all 14 networks, 200 targets/batch, evidence pack, text for 10,000 posts, 5 seats, commercial licence |
-| **All-in Bundle** | **$59 one-time** | Every pack, Studio-level caps. Regular total $137 (Starter $9 + Pro $29 + Studio $99) — the bundle is 57% off. |
+**Launch pricing** (first 90 days or 500 buyers, then regular prices
+apply): Starter $9, Pro $19, Studio $49, Bundle $59.
+**Regular prices:** Starter $19, Pro $29, Studio $99, Bundle $147.
+Studio is a **finite pack**: 10 evidence-pack reports included,
+200 targets/batch, 25,000 captures/search, 10,000 text fetches,
+5 seats. Every tier has a stated cap.
+
+| Pack | Launch price | Regular price | What's in it |
+|---|---|---|---|
+| Free | $0 forever | $0 | 25 captures/search, 3 networks per broad search, 3 targets/batch, text for 5 posts, CSV export |
+| Starter | $9 one-time | $19 | 250 captures/search, 7 networks, 10 targets/batch, text for 100 posts, CSV + JSON export, deleted-only diff |
+| **Pro Pack** | **$19 one-time** | $29 | 2,500 captures/search, all 14 networks, 50 targets/batch, deleted-only diff + live check, text for 1,000 posts, keyword search, all export formats |
+| Studio | $49 one-time | $99 | 25,000 captures/search, all 14 networks, 200 targets/batch, text for 10,000 posts, **10 evidence-pack reports**, 5 seats, commercial licence |
+| **All-in Bundle** | **$59 one-time** | $147 | Every pack, Studio-level caps. Regular total $147 (Starter $19 + Pro $29 + Studio $99) — the launch bundle is **60% off**. |
+| Text-fetch top-up | $15 (500 credits) | $15 | 500 replay-text fetches, added to any paid pack, never expires |
 
 Cheaper than the subscription rivals, on purpose: Social Catfish is
 $27.48/mo after a $5.73 trial, Spokeo $19.95/mo, Hunchly $169/yr,
 Pagefreezer from $1,500/yr. Pro launch ($19) costs less than one
-month of Social Catfish — and never bills again. Net kept after fees:
-Paddle 5%+50¢ keeps $8.05 / $17.55 / $46.05 / $55.55 on
-$9 / $19 / $49 / $59; Stripe 2.9%+30¢ keeps $8.44 / $18.15 / $47.28 /
-$56.99. See `web/config.js` for the full fee math.
+month of Social Catfish — and never bills again. Net kept after fees
+(launch / regular): Paddle 5%+50¢ keeps $8.05 / $17.55 on Starter,
+$17.55 / $27.05 on Pro, $46.05 / $93.55 on Studio, $55.55 / $139.15
+on the Bundle, $13.75 on the top-up; Stripe 2.9%+30¢ keeps $8.44 /
+$18.15, $18.15 / $27.86, $47.28 / $95.83, $56.99 / $142.44, $14.27.
+See `web/config.js` for the full fee math (generated from
+`pricing.yaml`).
 
-## Plans — capped free tier (new in v1.2.0)
+## Feature chart — every pack, side by side
 
-Every command takes `--plan free|starter|pro|studio` (default `free`).
-Caps are enforced, not just printed:
+The same table is rendered on the web page from `web/config.js`
+(`FEATURE_CHART`, generated from `pricing.yaml`).
 
-| Plan | captures/archive | networks/find | targets/batch | text fetch |
-|---|---|---|---|---|
-| free | 25 | 3 | 3 | 5 posts |
-| starter | 250 | 7 | 10 | 100 posts |
-| pro | 2,500 | 14 | 50 | 1,000 posts |
-| studio | 25,000 | 14 | 200 | 10,000 posts |
+| Feature | Free $0 | Starter $9 | Pro $19 | Studio $49 | Bundle $59 |
+|---|---|---|---|---|---|
+| Captures per search | 25 | 250 | 2,500 | 25,000 | 25,000 |
+| Networks per broad search (find) | 3 | 7 | All 14 | All 14 | All 14 |
+| Batch targets per run | 3 | 10 | 50 | 200 | 200 |
+| Replay-text fetches per search | 5 | 100 | 1,000 | 10,000 | 10,000 |
+| Exports | CSV | CSV + JSON | CSV + JSON + JSONL + HTML | CSV + JSON + JSONL + HTML | CSV + JSON + JSONL + HTML |
+| Deleted-only diff | — | ✓ | ✓ | ✓ | ✓ |
+| Replay text fetch | ✓ | ✓ | ✓ | ✓ | ✓ |
+| archive.today / Ghostarchive fallback links | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Keyword search (over fetched text) | — | — | ✓ | ✓ | ✓ |
+| Evidence-pack reports included | — | — | — | 10 | 10 |
+| Seats | 1 | 1 | 1 | 5 | 5 |
+| Commercial use | — | — | — | ✓ | ✓ |
+| Support | Community | Community | Community | Priority (human inbox, 48h) | Priority (human inbox, 48h) |
+
+## Plans — capped free tier (new in v1.2.0, licence keys in v1.3.0)
+
+Every command takes `--plan free|starter|pro|studio` (default `free`)
+or `--licence KEY` (see "Licence keys" below). Caps are enforced,
+not just printed:
+
+| Plan | captures/archive | networks/find | targets/batch | text fetch | evidence reports | seats |
+|---|---|---|---|---|---|---|
+| free | 25 | 3 | 3 | 5 posts | 0 | 1 |
+| starter | 250 | 7 | 10 | 100 posts | 0 | 1 |
+| pro | 2,500 | 14 | 50 | 1,000 posts | 0 | 1 |
+| studio | 25,000 | 14 | 200 | 10,000 posts | 10 | 5 |
 
 The plan and its caps are printed at the start of every run, and a
 clamped `--limit` is reported ("capped to 25 on the free plan").
-Paid plans are one-time licences; `--plan` is the honour-system
-selector until licence keys land (Paddle webhook → key file, planned).
+Caps come from `pricing.yaml` — edit it and run
+`scripts/sync_pricing.py` to change them.
+
+## Licence keys (new in v1.3.0)
+
+Paid packs unlock by licence key, format
+`DP1-<TIER>-<16 random chars>-<8 hex checksum>`, e.g.
+`DP1-PRO-ABCDEFGHIJKLMNOP-1a2b3c4d`. The checksum is HMAC-SHA256
+over the tier + random part, keyed by a secret — this v1 scheme is
+the **dev/offline equivalent** of the production design (Ed25519
+keys minted by a Cloudflare Pages Function on the Paddle webhook,
+verified with a baked-in public key; see
+`docs/storage-auth-plan.md`, addendum at the end). A symmetric HMAC
+means anyone holding the secret can mint keys, so the secret must
+never ship to buyers or land in the repo.
+
+```bash
+# Mint a key (dev-only — needs the secret in the environment):
+WAYBACK_SOCIAL_LICENCE_SECRET=<secret> wayback-social licence make --tier pro --email buyer@example.com
+# Verify a key (needs the same secret, from the env var or from
+# ~/.config/wayback-social/licence.key):
+WAYBACK_SOCIAL_LICENCE_SECRET=<secret> wayback-social licence check DP1-PRO-...
+
+# Use a key — its tier's caps override --plan:
+wayback-social archive x jack --licence DP1-PRO-... --limit 5000
+wayback-social find clumsysmurf --licence DP1-STUDIO-... --networks x,instagram
+```
+
+A Bundle purchase mints a **Studio** key (bundle caps are
+Studio-level). Without a secret on the machine, `--licence` fails
+with instructions instead of silently falling back to free caps.
 
 ## Deleted-only diff (new in v1.1.0, export diff + live check in v1.2.0)
 

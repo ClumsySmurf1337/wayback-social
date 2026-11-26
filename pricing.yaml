@@ -1,0 +1,161 @@
+# DeletedProof pricing — SINGLE SOURCE OF TRUTH (v1.3).
+#
+# To change a price or a cap: edit this file, then run:
+#   python scripts/sync_pricing.py
+# That regenerates wayback_social/plans.py (caps, features, labels) and
+# web/config.js (PRICING, FEATURE_CHART, fee math). Never edit those
+# generated blocks by hand — scripts/sync_pricing.py --check fails the
+# build if they drift from this file.
+#
+# Launch pricing ends after 90 days or 500 buyers, then regular prices
+# apply. Fees: Paddle 5% + 50c, Stripe 2.9% + 30c.
+# Net kept = price * (1 - percent) - fixed.
+#
+# Bundle math (corrected in v1.3 — the v1.2 $137 / 57% was wrong):
+#   regular total = Starter $19 + Pro $29 + Studio $99 = $147
+#   launch bundle $59 is ($147 - $59) / $147 = 59.9% off, i.e. 60% off.
+#
+# Studio is a PACK with finite caps (John, 2026-11-26): 10 evidence-pack
+# reports included, batch 200, 25,000 captures/search, 10,000 text
+# fetches, 5 seats. No tier is sold as having no cap — never promise
+# a cap-free tier in pricing copy.
+
+launch:
+  note: "Launch pricing — first 90 days or 500 buyers, then regular prices apply."
+  topup_price: 15
+  topup_credits: 500
+
+fees:
+  paddle:
+    percent: 0.05
+    fixed: 0.50
+  stripe:
+    percent: 0.029
+    fixed: 0.30
+
+tiers:
+  free:
+    name: "Free"
+    launch: 0
+    regular: 0
+    cadence: "forever"
+    blurb: "Try it. Capped, but genuinely useful."
+    cta: "Start free"
+    checkout: ""
+    featured: false
+    caps:
+      archive_limit: 25
+      find_networks: 3
+      batch_targets: 3
+      fetch_text: 5
+      evidence_reports: 0
+      seats: 1
+    features:
+      exports: ["csv"]
+      deleted_diff: false
+      replay_text: true
+      keyword_search: false
+      archive_fallbacks: true
+      evidence_pack: false
+      commercial_use: false
+      support: "Community"
+  starter:
+    name: "Starter"
+    launch: 9
+    regular: 19
+    cadence: "one-time"
+    blurb: "The cheap pack. One deleted post is worth $9."
+    cta: "Buy Starter — $9"
+    checkout: "starter"
+    featured: false
+    caps:
+      archive_limit: 250
+      find_networks: 7
+      batch_targets: 10
+      fetch_text: 100
+      evidence_reports: 0
+      seats: 1
+    features:
+      exports: ["csv", "json"]
+      deleted_diff: true
+      replay_text: true
+      keyword_search: false
+      archive_fallbacks: true
+      evidence_pack: false
+      commercial_use: false
+      support: "Community"
+  pro:
+    name: "Pro Pack"
+    launch: 19
+    regular: 29
+    cadence: "one-time"
+    blurb: "Launch price — less than one month of Social Catfish ($27.48/mo)."
+    cta: "Buy Pro Pack — $19"
+    checkout: "pro"
+    featured: true
+    caps:
+      archive_limit: 2500
+      find_networks: 14
+      batch_targets: 50
+      fetch_text: 1000
+      evidence_reports: 0
+      seats: 1
+    features:
+      exports: ["csv", "json", "jsonl", "html"]
+      deleted_diff: true
+      replay_text: true
+      keyword_search: true
+      archive_fallbacks: true
+      evidence_pack: false
+      commercial_use: false
+      support: "Community"
+  studio:
+    name: "Studio"
+    launch: 49
+    regular: 99
+    cadence: "one-time"
+    blurb: "A pack for teams, researchers and newsrooms — 10 evidence-pack reports included."
+    cta: "Buy Studio — $49"
+    checkout: "studio"
+    featured: false
+    caps:
+      archive_limit: 25000
+      find_networks: 14
+      batch_targets: 200
+      fetch_text: 10000
+      evidence_reports: 10
+      seats: 5
+    features:
+      exports: ["csv", "json", "jsonl", "html"]
+      deleted_diff: true
+      replay_text: true
+      keyword_search: true
+      archive_fallbacks: true
+      evidence_pack: true
+      commercial_use: true
+      support: "Priority (human inbox, 48h)"
+  bundle:
+    name: "All-in Bundle"
+    launch: 59
+    regular: 147
+    cadence: "one-time"
+    blurb: "Every pack, one price. 60% off the $147 regular total."
+    cta: "Buy All-in Bundle — $59"
+    checkout: "bundle"
+    featured: false
+    caps:
+      archive_limit: 25000
+      find_networks: 14
+      batch_targets: 200
+      fetch_text: 10000
+      evidence_reports: 10
+      seats: 5
+    features:
+      exports: ["csv", "json", "jsonl", "html"]
+      deleted_diff: true
+      replay_text: true
+      keyword_search: true
+      archive_fallbacks: true
+      evidence_pack: true
+      commercial_use: true
+      support: "Priority (human inbox, 48h)"

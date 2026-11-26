@@ -1,5 +1,49 @@
 # Changelog — wayback-social
 
+## v1.3.0 — 2026-11-26
+
+Pricing v1.3 (John's corrections) + licence keys. Tests 51/51, live
+CDX smoke verified — see README "Verified live".
+
+- **Studio is a finite pack.** Studio = 10 evidence-pack reports
+  included, batch 200, 25,000 captures/search, 10,000 text fetches,
+  5 seats. Every no-cap claim about a tier is removed from plans.py,
+  config.js, index.html and README (a test enforces it). Nothing in
+  any tier is uncapped.
+- **Launch vs regular pricing.** Launch (first 90 days or 500
+  buyers): Starter $9 / Pro $19 / Studio $49 / Bundle $59. Regular:
+  $19 / $29 / $99 / Bundle $147. Top-up $15 per 500 text-fetch
+  credits. **Bundle math corrected:** regular total is $147
+  ($19+$29+$99), so the $59 launch bundle is 60% off — v1.2 said
+  $137 / 57%, which was wrong arithmetic, now fixed everywhere.
+- **Feature chart.** A real comparison table (13 rows × 5 tiers) on
+  the web page (rendered from `FEATURE_CHART` in config.js) and in
+  README — every cell comes from the same caps in pricing.yaml.
+- **Single source of truth.** New `pricing.yaml` + `scripts/sync_pricing.py`
+  (stdlib only, own mini YAML parser) regenerates
+  `wayback_social/plans.py` caps/features/labels and `web/config.js`
+  PRICING + FEATURE_CHART + fee math. `sync_pricing.py --check`
+  fails loudly on drift; `tests/test_pricing_sync.py` asserts yaml,
+  plans.py and config.js agree (incl. a Decimal fee-math fix: the
+  $15 top-up Stripe net is $14.27, not $14.26).
+- **Licence keys (v1, offline-verifiable).** New
+  `wayback_social/licence.py`: keys look like
+  `DP1-PRO-<16 base32>-<8 hex HMAC>`; `wayback-social licence make
+  --tier pro --email a@b.c` (dev-only, needs
+  `WAYBACK_SOCIAL_LICENCE_SECRET`) and `licence check KEY`;
+  `archive` / `find` / `batch` / `diff` accept `--licence KEY` to
+  unlock that tier's caps (overrides `--plan`). A Bundle purchase
+  mints a Studio key. Production minting stays Ed25519 via the
+  Paddle webhook (see docs/storage-auth-plan.md addendum) — the HMAC
+  scheme is the dev/offline equivalent, and the secret must never
+  ship to buyers. 11 new tests in tests/test_licence.py.
+- **Known gap, unchanged:** export-format gating (Free = CSV only)
+  and feature gating (deleted-diff needs Starter+) are policy in
+  the chart, not yet enforced in the CLI — they close with licence
+  enforcement (see docs/pricing-features.md §5). The evidence-pack
+  ZIP exporter itself is still unbuilt (the 10-report cap is the
+  entitlement; `diff --only deleted` is the current evidence export).
+
 ## v1.2.0 — 2026-11-26
 
 Top-8 competition improvements, implemented + tested (30 tests pass,
@@ -25,6 +69,9 @@ live CDX smoke verified — see README "Verified live").
 - **New pricing.** Free $0 / Starter $9 / Pro $19 launch (reg. $29) /
   Studio $49 launch (reg. $99) / All-in Bundle $59 one-time.
   Bundle math: regular total $137 (9+29+99), bundle is 57% off.
+  (Correction in v1.3: the regular total is $147 ($19+$29+$99), so
+  the bundle is 60% off. The $137 figure above is what v1.2 shipped
+  with — wrong arithmetic, kept here as history.)
   Paddle default, Stripe/Gumroad/email alternatives, `?checkout=` /
   `?ab=` switching kept. Fee math in `web/config.js`.
 - **SEO.** Title/description/OG/Twitter card/canonical/JSON-LD
