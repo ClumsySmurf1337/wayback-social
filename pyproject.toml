@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wayback-social"
+version = "1.1.0"
+description = "Retrieve archived social-media posts from the Wayback Machine CDX API, for all social networks — a generalised waybacktweets."
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "wayback-social contributors" }]
+requires-python = ">=3.10"
+keywords = ["wayback", "archive.org", "CDX", "OSINT", "social media",
+            "twitter", "instagram", "tiktok", "youtube", "reddit"]
+dependencies = ["click>=8.1", "requests>=2.30", "rich>=13.6"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Utilities",
+]
+
+[project.scripts]
+wayback-social = "wayback_social.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/claromes/waybacktweets"
+"Original project (Twitter-only)" = "https://github.com/claromes/waybacktweets"
+
+[tool.setuptools.packages.find]
+include = ["wayback_social*"]
