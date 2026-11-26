@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="wayback-social — Find deleted posts in the Wayback Machine">
 <meta name="twitter:description" content="Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more. Free search; Pro $19 one-time (launch).">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"wayback-social","applicationCategory":"UtilitiesApplication","operatingSystem":"Web, Windows, macOS, Linux","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"9","priceCurrency":"USD","name":"Starter"},{"@type":"Offer","price":"19","priceCurrency":"USD","name":"Pro Pack"},{"@type":"Offer","price":"49","priceCurrency":"USD","name":"Studio"},{"@type":"Offer","price":"59","priceCurrency":"USD","name":"All-in Bundle"}],"description":"Search the Wayback Machine for archived social media posts from 14 networks, find deleted posts, and export evidence packs."}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"wayback-social","applicationCategory":"UtilitiesApplication","operatingSystem":"Web, Windows, macOS, Linux","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"9","priceCurrency":"USD","name":"Starter"},{"@type":"Offer","price":"19","priceCurrency":"USD","name":"Pro Pack"},{"@type":"Offer","price":"49","priceCurrency":"USD","name":"Studio"},{"@type":"Offer","price":"59","priceCurrency":"USD","name":"All-in Bundle"},{"@type":"Offer","price":"15","priceCurrency":"USD","name":"Text-fetch top-up (500 credits)"}],"description":"Search the Wayback Machine for archived social media posts from 14 networks, find deleted posts, and export evidence packs."}
 </script>
 <style>
 :root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#7c8cff;--accent2:#4ade80;--warn:#fbbf24}
@@ -86,7 +86,15 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <section id="pricing">
     <h2>Pricing — buy the pack, keep it forever</h2>
     <p class="muted">Free search on this page, forever (25 captures per search). The packs are one-time purchases — no subscription. Cheaper than the rivals: Social Catfish is $27.48/mo, Spokeo $19.95/mo, Hunchly $169/yr — our Pro launch pack is $19 <b>once</b>. Prices are draft until checkout links are connected (see <code>web/config.js</code>).</p>
+    <p class="muted" id="launch-note"></p>
     <div class="pricing" id="plans"></div>
+  </section>
+
+  <section class="card" id="compare">
+    <h2 style="margin-top:0">Compare packs — every feature, side by side</h2>
+    <p class="muted">Studio is a finite pack: 10 evidence-pack reports, 200 batch targets, 25,000 captures per search, 5 seats. Every tier has a stated cap — the caps are the product.</p>
+    <div style="overflow-x:auto"><table id="chart"><thead><tr><th>Feature</th><th>Free</th><th>Starter</th><th>Pro</th><th>Studio</th><th>Bundle</th></tr></thead><tbody></tbody></table></div>
+    <p class="muted">Prices and caps come from <code>pricing.yaml</code> (single source of truth) — to change a price, edit that file and run <code>scripts/sync_pricing.py</code>.</p>
   </section>
 
   <section class="card">
@@ -165,6 +173,20 @@ function renderPlans(){
   });
 }
 renderPlans();
+function renderChart(){
+  const rows = cfg.FEATURE_CHART || [];
+  const cols = ["free","starter","pro","studio","bundle"];
+  const tb = document.querySelector("#chart tbody");
+  if (tb) tb.innerHTML = rows.map(r=>`<tr><th>${r.label}</th>${
+    cols.map(t=>`<td>${(r.values && r.values[t]) || "—"}</td>`).join("")}</tr>`).join("");
+  const ln = $("launch-note");
+  if (ln && cfg.LAUNCH_NOTE) {
+    const regs = cfg.PRICING.filter(p=>p.regular)
+      .map(p=>`${p.name} ${p.regular}`).join(" · ");
+    ln.innerHTML = `<b>${cfg.LAUNCH_NOTE}</b> Regular prices: ${regs}.`;
+  }
+}
+renderChart();
 function renderRows(rows){
   lastRows = rows;
   const tb = document.querySelector("#results tbody"); tb.innerHTML="";
