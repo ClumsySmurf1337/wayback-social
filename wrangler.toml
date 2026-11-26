@@ -1,10 +1,13 @@
-# Cloudflare Pages config — wayback-social (static site, no build step).
-# Deploy: connect the GitHub repo (ClumsySmurf1337/wayback-social) to
-# Cloudflare Pages; see docs/cloudflare-deploy.md for the exact clicks.
-# Do NOT put secrets here — there are none: the page talks to the
-# public CDX API from the visitor's browser, and checkout links live
-# in web/config.js (REPLACE_* placeholders until Paddle is connected).
-name = "wayback-social"
+# Cloudflare Pages config — DeletedProof (static site, no build step).
+# LIVE: Pages project "deletedproof" (deletedproof.pages.dev) connected
+# to GitHub ClumsySmurf1337/wayback-social, main branch, output web/.
+# Test domains: deletedproof.northforgelabs.dev + app./verify./osint./
+# legal. subdomains. Production domain once bought: deletedproof.com.
+# See docs/cloudflare-deploy.md. Do NOT put secrets here — there are
+# none: the page talks to the public CDX API from the visitor's
+# browser, and checkout links live in web/config.js (REPLACE_*
+# placeholders until Paddle is connected).
+name = "deletedproof"
 compatibility_date = "2026-11-26"
 
 [pages]
