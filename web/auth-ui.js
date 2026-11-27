@@ -83,6 +83,45 @@
     });
   }
 
+  /* The UI bundle holds Clerk's prebuilt components (the SignIn
+   * modal, etc.). Script mode needs TWO scripts: clerk.browser.js
+   * sets window.Clerk (the instance) and ui.browser.js defines
+   * window.__internal_ClerkUICtor (the UI constructor), which must
+   * be passed to clerk.load({ ui: { ClerkUI } }). Loading only the
+   * SDK leaves load() degraded — the Sign in button renders, but
+   * openSignIn() throws "Clerk was not loaded with Ui components"
+   * (2026-11-27). The UI bundle comes from the Frontend API host,
+   * which is the base64 part of the publishable key. */
+  function frontendApiHost(key) {
+    try {
+      var b64 = String(key).split("_").slice(2).join("_")
+        .replace(/-/g, "+").replace(/_/g, "/");
+      while (b64.length % 4) b64 += "=";
+      return atob(b64).replace(/\$$/, "");
+    } catch (e) { return null; }
+  }
+  function loadUiBundle(key) {
+    return new Promise(function (resolve, reject) {
+      if (typeof document === "undefined") return reject(new Error("no document"));
+      if (typeof window !== "undefined" && window.__internal_ClerkUICtor) {
+        return resolve(window.__internal_ClerkUICtor);
+      }
+      var host = frontendApiHost(key);
+      if (!host) return reject(new Error("Clerk publishable key has no Frontend API host"));
+      var s = document.createElement("script");
+      s.src = "https://" + host + "/npm/@clerk/ui@1/dist/ui.browser.js";
+      s.async = true;
+      s.crossOrigin = "anonymous";
+      s.onload = function () {
+        var ctor = (typeof window !== "undefined" && window.__internal_ClerkUICtor) || null;
+        if (!ctor) return reject(new Error("Clerk UI bundle loaded but did not define its constructor"));
+        resolve(ctor);
+      };
+      s.onerror = function () { reject(new Error("Clerk UI bundle failed to load from " + s.src)); };
+      document.head.appendChild(s);
+    });
+  }
+
   /* Dev/prod env swap (docs/clerk-env-swap.md): the deployed
    * environment's public keys come from /api/config
    * (web/runtime-config.js). It wins when it returns a real key;
@@ -108,8 +147,9 @@
       if (!clerk || typeof clerk.load !== "function") {
         throw new Error("Clerk SDK loaded but window.Clerk has no load()");
       }
+      var uiCtor = await loadUiBundle(key);
       A._setClerk(clerk);
-      await clerk.load();
+      await clerk.load({ ui: { ClerkUI: uiCtor } });
       if (clerk.addListener) clerk.addListener(function () { A._syncUser(); });
       A._syncUser();
       uiState = null;

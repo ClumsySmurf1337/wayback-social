@@ -4,7 +4,8 @@
 # - challenges.cloudflare.com: Turnstile widget script + iframe + API (web/turnstile.js)
 # - *.clerk.accounts.dev: Clerk Frontend API (dev instance beloved-gazelle-4678
 #   + the future production instance, which will have a different subdomain);
-#   also in script-src — clerk.load() may fetch UI code from the same host.
+#   also in script-src — the UI bundle ui.browser.js loads from this host
+#   (auth-ui.js loadUiBundle), and clerk.load() may fetch UI code there too.
 # - static.cloudflareinsights.com + cloudflareinsights.com: Web Analytics
 #   beacon (web/analytics.js, token-gated — not live until a token is set)
 # 2026-11-27: script-src was 'self' only, which blocked the Clerk SDK and

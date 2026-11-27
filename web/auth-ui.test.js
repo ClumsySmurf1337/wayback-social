@@ -131,5 +131,71 @@ function fakeClerk(overrides) {
   check("mount fallback writes no error", dom.els["auth-area"].textContent === "");
 })();
 
-if (failed > 0) { console.log("\n" + failed + " auth-ui check(s) failed."); process.exit(1); }
-console.log("\nAll auth-ui checks passed.");
+/* --- 7. UI bundle loads from the Frontend API host and is passed to load() ---
+ * 2026-11-27 the preview rendered Sign in but openSignIn() threw
+ * "Clerk was not loaded with Ui components": only the SDK script was
+ * loaded, never ui.browser.js. The boot's initAuth (which runs on
+ * load with the sandbox config) is the code under test here: it must
+ * request BOTH scripts and hand the UI constructor to clerk.load(). */
+async function testUiBundleLoads() {
+  const key = "pk_test_" + Buffer.from("example.clerk.accounts.dev$").toString("base64");
+  const scripts = [];
+  const dom = makeDom(["auth-area"]);
+  dom.createElement = function () {
+    const s = { setAttribute: function () {}, };
+    scripts.push(s);
+    return s;
+  };
+  const sandbox = {
+    window: { WS_AUTH: A, WAYBACK_SOCIAL_CONFIG: { CLERK: { publishable_key: key, enabled: true } } },
+    document: dom,
+    console,
+    atob: function (s) { return Buffer.from(s, "base64").toString("binary"); },
+  };
+  sandbox.window.window = sandbox.window;
+  vm.createContext(sandbox);
+  const src = fs.readFileSync(path.join(__dirname, "auth-ui.js"), "utf8");
+  vm.runInContext(src, sandbox);
+  const tick = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  // The boot's initAuth requests the SDK script first, then waits for it.
+  await tick(50);
+  check("UI fix: SDK script requested first", scripts.length === 1,
+    scripts.map(function (s) { return s.src; }).join(", "));
+  check("UI fix: SDK script is clerk.browser.js",
+    scripts[0] && scripts[0].src.indexOf("clerk.browser.js") !== -1,
+    scripts[0] && scripts[0].src);
+  // Fake the SDK bundle defining window.Clerk, then fire its onload.
+  let loadOptions = null;
+  const fakeClerk = {
+    user: null, session: null, addListener: function () {},
+    load: async function (opts) { loadOptions = opts; },
+  };
+  sandbox.window.Clerk = fakeClerk;
+  scripts[0].onload();
+  // Now initAuth requests the UI bundle from the Frontend API host.
+  await tick(50);
+  check("UI fix: UI script requested second", scripts.length === 2,
+    scripts.map(function (s) { return s.src; }).join(", "));
+  check("UI fix: UI script comes from the Frontend API host",
+    scripts[1] && scripts[1].src === "https://example.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js",
+    scripts[1] && scripts[1].src);
+  // Fake the UI bundle defining its constructor, then fire its onload.
+  function FakeUI() {}
+  sandbox.window.__internal_ClerkUICtor = FakeUI;
+  scripts[1].onload();
+  for (let i = 0; i < 100 && loadOptions === null; i++) await tick(10);
+  check("UI fix: clerk.load() receives the UI constructor",
+    loadOptions && loadOptions.ui && loadOptions.ui.ClerkUI === FakeUI,
+    JSON.stringify(loadOptions && Object.keys(loadOptions)));
+  check("UI fix: successful load renders the Sign in button",
+    dom.els["auth-area"].innerHTML.indexOf("auth-signin") !== -1,
+    dom.els["auth-area"].innerHTML);
+}
+
+testUiBundleLoads().then(function () {
+  if (failed > 0) { console.log("\n" + failed + " auth-ui check(s) failed."); process.exit(1); }
+  console.log("\nAll auth-ui checks passed.");
+}).catch(function (e) {
+  console.log("FAIL  UI bundle test threw: " + (e && e.stack || e));
+  process.exit(1);
+});
