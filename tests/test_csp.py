@@ -46,6 +46,12 @@ def test_csp_allows_clerk_frontend_api():
     assert "https://*.clerk.accounts.dev" in csp["connect-src"]
 
 
+def test_csp_allows_clerk_host_scripts():
+    # clerk.load() may fetch UI code from the Frontend API host.
+    csp = _csp()
+    assert "https://*.clerk.accounts.dev" in csp["script-src"]
+
+
 def test_csp_allows_analytics_beacon():
     csp = _csp()
     assert "https://static.cloudflareinsights.com" in csp["script-src"]
