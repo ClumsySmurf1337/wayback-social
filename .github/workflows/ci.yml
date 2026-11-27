@@ -20,6 +20,7 @@ jobs:
       - run: node web/search-job.test.js
       - run: node web/turnstile.test.js
       - run: node web/auth.test.js
+      - run: node web/auth-ui.test.js
       - run: node web/modes.test.js
       - run: node web/evidence-usage.test.js
       - run: node web/analytics.test.js
