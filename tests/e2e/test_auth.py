@@ -113,3 +113,35 @@ def test_dashboard_account_card_signed_out(page):
     assert page.locator("#link-licence-box").is_hidden()
     assert page.locator("#licence-key").count() == 1
     assert "Sign in" in text
+
+
+def test_clerk_sdk_renders_sign_in_when_cdn_reachable(page):
+    """Strict when reachable: if the Clerk SDK script itself returns 200,
+    the auth area MUST render Sign in — the failure text is a bug, not a
+    working state. 2026-11-27 the suite accepted the failure text and
+    shipped two broken integrations (CSP blocked the SDK, then the code
+    did `new window.Clerk(key)` although the v6 script bundle exposes
+    an instance, not a constructor). When the CDN is blocked in this
+    sandbox the SDK never returns 200 and this test skips — the live
+    preview re-probe owns the proof there."""
+    responses = []
+    page.on("response", lambda r: responses.append(r))
+    goto(page)
+    area = page.locator("#auth-area")
+    area.wait_for(timeout=10_000)
+    try:
+        page.wait_for_function(
+            """() => {
+                 const t = document.querySelector('#auth-area').innerText;
+                 return !t.includes('loading');
+               }""",
+            timeout=20_000)
+    except Exception:
+        pass  # fall through: the SDK-status check below decides
+    sdk_ok = [r for r in responses
+              if "cdn.jsdelivr.net/npm/@clerk" in r.url and r.status == 200]
+    if not sdk_ok:
+        pytest.skip("Clerk SDK fetch did not return 200 here (CDN blocked) — live check owns this")
+    text = area.inner_text()
+    assert "Sign in" in text, text
+    assert "failed to load" not in text, text
