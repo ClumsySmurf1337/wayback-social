@@ -284,6 +284,18 @@ to Better Auth).
   the dashboard when the account work needs it.
 - `auth-ui.js` is browser-only (no Node tests) — covered by the
   Playwright suite instead.
+- **Clerk v6 script-tag integration (do not "fix" this back):**
+  `web/auth-ui.js` loads `clerk.browser.js` from jsDelivr with a
+  `data-clerk-publishable-key` attribute, and uses `window.Clerk`
+  directly as the instance (`await clerk.load()`). It is NOT a
+  constructor — the `new Clerk(key)` form is only for the NPM/bundler
+  path (`import Clerk from "@clerk/clerk-js"`). 2026-11-27 the code
+  did `new window.Clerk(key)` and sign-in broke on the preview with
+  "ClerkCtor is not a constructor" (after a CSP fix had already
+  unblocked the script load). `tests/e2e/test_auth.py` now has a
+  strict-when-reachable test: if the SDK script returns 200, the
+  auth area must render Sign in. The CSP must keep allowing the
+  Clerk hosts — see `tests/test_csp.py`.
 
 ## 10. Dev/prod env swap + close-to-prod checklist
 
