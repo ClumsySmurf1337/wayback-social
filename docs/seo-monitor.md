@@ -3,7 +3,7 @@
 ## The check (run after every deploy)
 
 ```bash
-python3 scripts/seo_check.py https://wayback-social.pages.dev/
+python3 scripts/seo_check.py https://deletedproof.northforgelabs.dev/
 ```
 
 It fetches the live homepage and checks: title length, meta
