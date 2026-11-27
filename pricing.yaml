@@ -21,7 +21,13 @@
 # a cap-free tier in pricing copy.
 
 launch:
-  note: "Launch pricing — first 90 days or 500 buyers, then regular prices apply."
+  # WHY the discount exists, and HOW LONG it lasts — shown on the
+  # pricing section and on every paid card (see renderPlans /
+  # renderChart in web/console.js). No countdown is shown: there is
+  # no backend buyer count, and the 90 days start at launch, so a
+  # live timer would be invented. The plain-words end condition is
+  # the honest version until checkout + sales counting exist.
+  note: "Launch pricing — early-bird offer for our first buyers: launch prices end after the first 90 days or the first 500 buyers, whichever comes first — then regular prices apply."
   topup_price: 15
   topup_credits: 500
 

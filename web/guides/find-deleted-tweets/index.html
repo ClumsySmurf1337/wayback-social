@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static guide page. Like trust.html, this page is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. Canonical host follows
+  the site-wide convention (deletedproof.northforgelabs.dev); see
+  docs/canonical-decision.md — the retarget, if John picks it, must
+  cover these pages too. -->
+<title>How to find deleted tweets — ArchiveCheck</title>
+<meta name="description" content="Find a deleted tweet in the public archive: search any X handle by date range, read the capture list, and check each post live with the deleted-only diff.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/guides/find-deleted-tweets/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="How to find deleted tweets — ArchiveCheck">
+<meta property="og:description" content="Find a deleted tweet in the public archive: search any X handle by date range, read the capture list, and check each post live with the deleted-only diff.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/guides/find-deleted-tweets/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="How to find deleted tweets — ArchiveCheck">
+<meta name="twitter:description" content="Find a deleted tweet in the public archive: search any X handle by date range, read the capture list, and check each post live with the deleted-only diff.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"How to find deleted tweets","description":"Find a deleted tweet in the public archive: search any X handle by date range, read the capture list, and check each post live with the deleted-only diff.","author":{"@type":"Organization","name":"ArchiveCheck"},"publisher":{"@type":"Organization","name":"ArchiveCheck"},"datePublished":"2026-11-27","dateModified":"2026-11-27","mainEntityOfPage":"https://deletedproof.northforgelabs.dev/guides/find-deleted-tweets/"}
+</script>
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}.card h3{margin:18px 0 6px}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+.warnbox{border-left:4px solid var(--warn);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.warnbox p{margin:6px 0}
+ul,ol{line-height:1.8;color:var(--text)}
+ul li::marker,ol li::marker{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+code{background:#0f1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>How to find <span>deleted tweets</span></h1>
+  <p class="sub">Search the public archive for an X handle's deleted posts — with the date each one existed and a link to its replay. Free, no account.</p>
+  <p><a href="../../index.html">← Back to search</a> · <a href="../../dashboard.html">My dashboard</a> · <a href="index.html">All guides</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>What you get</h2>
+    <p>A deleted tweet is gone from X, but the Wayback Machine may have captured it first. A search returns a dated list of captures: the capture timestamp, the original post URL, and a link to the archived snapshot you can open and read. A match proves the post existed on that date. It does not prove who wrote it or why it was deleted.</p>
+    <p>X has the best archive coverage of any network in this tool — the Wayback Machine has been saving X posts since 2006. That is why the guide starts here.</p>
+  </section>
+
+  <section class="card">
+    <h2>The search, step by step</h2>
+    <ol>
+      <li><b>Open the <a href="../../index.html">search console</a></b> and pick network <b>X / Twitter</b>.</li>
+      <li><b>Type the handle</b> without the @ — for example <code>jack</code>. One handle at a time; to check the same handle on all 14 networks, tick <b>All networks</b> instead.</li>
+      <li><b>Set a date range</b> with the From / To pickers (YYYYMMDD). A wide range is slower; a narrow range — say, the month the post vanished — is faster and cleaner.</li>
+      <li><b>Search archive.</b> Archive.org is slow: 20–60 seconds is normal, and it sometimes stalls or answers 503. The progress bar names the current step; Pause, Stop and Resume work, and a stalled request fails honestly after 120 seconds with a retry — it never silently shows you nothing.</li>
+      <li><b>Read the rows.</b> <b>Archived</b> is the capture timestamp. <b>Post</b> is the original URL. <b>Archived snapshot</b> opens the replay on web.archive.org. <b>Status</b> is the HTTP status the archive recorded.</li>
+    </ol>
+    <p class="muted">Free tier: 25 captures per search, CSV export. Starter ($9 launch, $19 regular) raises that to 250 captures and adds JSON export; Pro ($19 launch, $29 regular) to 2,500 captures, all 14 networks, and keyword search over fetched text. All packs are one-time purchases — no subscription.</p>
+  </section>
+
+  <section class="card">
+    <h2>Try it first: the jack demo</h2>
+    <p>Not sure what a result looks like? The console has a <b>demo search (jack, X)</b> button. It returns X's first post — "just setting up my twttr" — captured 21 March 2006. That is the oldest post in the archive for that handle, and the demo row is always labelled as a demo, never presented as a live result.</p>
+  </section>
+
+  <section class="card">
+    <h2>Which ones are actually deleted? Use the deleted diff</h2>
+    <p>A capture list alone does not tell you a post is gone — it only tells you it existed. <b>Deleted diff</b> (in Research tools on the console, Starter and up) checks each archived post against the live site and marks it <b>live</b>, <b>deleted</b>, or <b>unknown</b>:</p>
+    <ul>
+      <li><b>Deleted</b> — the live post answers 404 or 410.</li>
+      <li><b>Live</b> — the live post answers 200.</li>
+      <li><b>Unknown</b> — the live site was login-walled, rate-limited, or errored. Unknown is <b>never</b> counted as deleted.</li>
+    </ul>
+    <p>For X, the live check uses oEmbed — the only sanctioned no-login check X still allows. A single post loads logged-out; timelines and most profiles are login-walled, so the diff checks post URLs one by one.</p>
+  </section>
+
+  <section class="card">
+    <h2>What the archive can and can't do for X</h2>
+    <ul>
+      <li><b>Good:</b> post URLs, dates, and replay text for most public posts. Deleted posts keep their snapshot link.</li>
+      <li><b>Patchy:</b> some captures replay as a blank shell — the post text may still be in the page source, or recoverable through oEmbed. Private accounts are never captured. Most profiles and timelines are login-walled now.</li>
+      <li><b>Not real posts:</b> sequential placeholder IDs (1, 10, 1000) answer 404 but were never posts. A 404 means "not live now", not proof a post ever existed — the diff skips listing rows with no post ID for exactly this reason.</li>
+      <li><b>Slow and flaky:</b> archive.org goes down for ~20 minutes at a time and answers 503. A failed search is a failed search, not an empty result — retry it.</li>
+    </ul>
+    <div class="warnbox">
+      <p><b>Why archives are what's left.</b> The old free X scrapers are dead — snscrape's Twitter module broke in June 2023, Twint was archived in March 2023 — and the official X API is now pay-per-use ($0.005 per post read since February 2026, no free tier). Reading 10,000 posts costs $50, and deleted posts are gone from it entirely. The public archive is the only no-login record of what was posted and deleted.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Honest limits</h2>
+    <div class="limits">
+      <p><b>Public archived posts only. Found ≠ guilty. Not found ≠ not real.</b></p>
+      <p>A found post does not prove who wrote it, why it was deleted, or what anyone intended. A post that isn't found may never have been archived, may have been posted under a different handle, or may simply not be saved anywhere yet. Never use results to harass, stalk, or confront anyone — and never look up anyone under 18. <a href="../../trust.html">Trust &amp; safety</a></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Related guides</h2>
+    <ul>
+      <li><a href="../find-deleted-instagram-posts/index.html">How to find deleted Instagram posts</a> — where per-user search breaks down, and the single-post workaround.</li>
+      <li><a href="../catfish-check-5-minutes/index.html">Catfish check in 5 minutes</a> — the same search, run as a pre-meeting safety check.</li>
+      <li><a href="../what-the-archive-cant-tell-you/index.html">What the archive can't tell you</a> — the limits page, in full.</li>
+      <li><a href="../archivecheck-vs-waybacktweets/index.html">ArchiveCheck vs waybacktweets vs Deleted Tweet Finder</a> — what each tool actually does.</li>
+    </ul>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.<br>Last updated 27 November 2026.</footer>
+<script src="../../config.js"></script>
+<script src="../../analytics.js"></script>
+</body>
+</html>

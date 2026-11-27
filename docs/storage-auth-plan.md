@@ -7,6 +7,14 @@ Re-check at build time; vendors move fast. Companion docs:
 `docs/pricing-features.md` (tiers), `docs/cloudflare-hosting.md`
 (Pages + Paddle), `docs/branding-seo-plan.md` (subdomains, production).
 
+**Standing rule (John, 2026-11-26) — FREE TIERS ONLY until there are
+paying customers.** R2 Standard free tier only (10 GB-mo, 1M Class A /
+10M Class B ops/mo, free egress) — never Infrequent Access (no free
+tier), never a paid plan. Clerk free tier only; Resend free only. If a
+feature needs a paid plan to work, build the free path and log the paid
+option as a later upgrade gated on customers (see
+`docs/data-sources.md`, "Standing rule").
+
 ## 1. R2 storage — verified prices, our cost, retention
 
 ### Verified R2 rates (Standard storage, developers.cloudflare.com/r2/pricing)
@@ -96,6 +104,67 @@ Buckets (separate from the account's existing
 `deletedproof-packs` (production) and `deletedproof-packs-staging`
 (test deploys on `northforgelabs.dev`). Private buckets, no public
 access; all downloads go through presigned URLs.
+
+### Provisioning checklist (issue #5 — 2026-11-26 status)
+
+**Code DONE locally:** `functions/api/packs-upload.js` (207 lines) —
+DP2 licence verification + size/sha validation + SigV4 presigned PUT
+(15-min expiry, content-addressed key `packs/<free|paid>/<hash8>/<sha256>.zip`,
+free → 30-day retention, paid → 365-day); `functions/api/packs-upload.test.mjs`
+**14/14** (signature verified against an independent recomputation);
+pytest wrapper `tests/test_packs_upload.py`; CI runs the suite.
+**Buckets CREATED LIVE 2026-11-27 01:09 UTC** via the Cloudflare API
+(`POST /accounts/9ea150e75aa3812cbaea8ae80bfe2f8d/r2/buckets`, both
+`success: true`): `deletedproof-packs` and
+`deletedproof-packs-staging`, Standard class, WNAM, jurisdiction
+default. The `[[r2_buckets]] PACKS` binding in `wrangler.toml` is now
+uncommented (live on the next deploy). Still human: R2 S3 API token +
+`R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` Pages
+secrets (step 2 below), lifecycle rules (step 4), then a real end-to-end
+upload test after the push.
+
+**Standing rule (John, 2026-11-26): FREE TIERS ONLY.** R2 Standard
+free tier (10 GB-mo, 1M Class A / 10M Class B ops/mo, free egress).
+Never Infrequent Access (no free tier), never a paid plan, until
+paying customers. At ~3 MB/pack the free tier holds ~3,300 packs;
+1,000 users × 10 packs = $0.30/mo — the first paid R2 dollar is
+nowhere near v1 scale.
+
+Human steps (or one API call each — no purchase, no card):
+
+```bash
+# 1. Create the buckets — DONE LIVE 2026-11-27 01:09 UTC via the
+#    Cloudflare API (both success:true, Standard, WNAM). Commands kept
+#    here for reference / re-creation:
+#    npx wrangler r2 bucket create deletedproof-packs
+#    npx wrangler r2 bucket create deletedproof-packs-staging
+
+# 2. R2 S3 API token for presigning (dashboard: R2 → Manage R2 API
+#    Tokens → Create API token → Object Read & Write, apply to the
+#    two buckets above). Then set the Pages secrets:
+npx wrangler pages secret put R2_ACCOUNT_ID --project-name deletedproof
+npx wrangler pages secret put R2_ACCESS_KEY_ID --project-name deletedproof
+npx wrangler pages secret put R2_SECRET_ACCESS_KEY --project-name deletedproof
+#    PACKS_BUCKET is optional (defaults to deletedproof-packs);
+#    set it only if the bucket name ever changes.
+
+# 3. Uncomment the [[r2_buckets]] PACKS binding in wrangler.toml
+#    (needed by the pack-confirm endpoint, not by presigning) and
+#    redeploy (push to main auto-deploys).
+
+# 4. Lifecycle rules (dashboard: R2 → bucket → Settings → Object
+#    lifecycle rules; no wrangler one-liner is documented for this):
+#      packs/free/* → expire after 30 days
+#      packs/paid/* → expire after 365 days
+```
+
+**Still to build (follow-up with the Paddle go-live, not this issue):**
+`POST /api/pack-confirm` (verify the uploaded object's SHA-256,
+record the pack in D1 so the dashboard can show "expires on …") +
+D1 `packs` table migration + a client call from the dashboard/CLI
+after the PUT succeeds. The lifecycle rules enforce retention even
+without the D1 record — the confirm step is about visibility, not
+about deletion happening.
 
 ## 2. Users, login & tracking — free third parties compared
 

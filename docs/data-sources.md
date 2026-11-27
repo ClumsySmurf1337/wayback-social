@@ -8,25 +8,305 @@ changed. Companion docs: `docs/branding-seo-plan.md` (name/pricing),
 login). Competition context:
 `~/workspace/research_notes/wayback-social-competition-20261126-1841/report.md`.
 
+## Standing rule — FREE SOURCES AND FREE TIERS ONLY (John, 2026-11-26)
+
+**Until there are paying customers: no paid data sources, no paid service
+plans. Free sources only:** Wayback CDX, Arquivo.pt, Ghostarchive,
+Common Crawl, Bluesky/Mastodon live APIs, oEmbed, MemGator. **Free tiers
+only:** Resend free (3,000 emails/mo), Clerk free (50k retained users),
+R2 free tier (10 GB-mo), Cloudflare Web Analytics (free), YouTube Data
+API free (10k units/day).
+
+- **Never buy or subscribe to anything** for this project while the rule
+  stands — no X API tier, no paid Reddit access, no paid archive APIs,
+  no paid enrichment, no paid plan upgrades.
+- If a feature needs a paid source or plan to work, **build the free
+  path and log the paid option below as a later upgrade gated on
+  customers** — do not reach for the paid option.
+- This rule applies to every track and every future change, not just
+  this doc. It supersedes any earlier "evaluate paid option" language
+  in this repo; where this doc previously suggested a paid path, the
+  paid path is now a gated upgrade, not a build item.
+
+### Paid options — LATER UPGRADES, gated on paying customers (do not build)
+
+| Paid option | What it would unlock | Gate |
+|---|---|---|
+| X API (Basic $100/mo / Pro $5,000/mo) | Live X lookups, higher rate limits, full-archive search | Paying customers; only if free CDX/oEmbed path stops working for the tier that needs it |
+| Reddit API (paid data access) | Live Reddit user/subreddit checks (currently dead without OAuth) | Paying customers; archive-only until then |
+| Paid archive APIs / enrichment (e.g. commercial CDX mirrors, entity enrichment) | Faster/broader coverage, structured enrichment | Paying customers; free sources cover v1 |
+| Clerk paid tier (>$1,025/mo cliff after 50k retained users) | >50k retained users | Auth spend passes ~$100/mo — then evaluate Better Auth (MIT, D1-native, $0/user) first; see `docs/cloudflare-auth-options.md` §7–8 |
+| Cloudflare Workers Paid ($5/mo) | >100k Functions req/day | Traffic exceeds the free tier |
+| Resend paid / Paddle paid tiers | Higher email volume, lower fees at scale | Paying customers + volume need |
+
 **Verification method:** every "verified" claim below was probed live from
 this VM on 2026-11-26 (curl, public endpoints, no auth, no account) unless
 marked "cited" (taken from a named source, not re-probed). Star counts are
 from the GitHub API the same day; where the shared-IP rate limit blocked
 the API, the count is marked "unverified".
 
+## 0. Live verification 2026-11-27, 00:24–00:28 UTC (fresh round)
+
+Every source re-probed live from this VM; exact commands in
+TEST-REPORT.md ("Archive sources verification"). No stale claims —
+anything that changed since 2026-11-26 is corrected in §1/§2 below.
+
+| Source | Verdict | Live evidence (2026-11-27) |
+|---|---|---|
+| Wayback CDX | **working** | `archive x jack --limit 2` → "Found 4 capture(s). Parsed 4 post(s)"; `sources` probe closest snapshot 20260723100538 |
+| Arquivo.pt CDX | **working** | `arquivo jack --limit 5` → 5 results; real rows: jack status 1026984242893357056, captures 2018-08-09..14, status 200. Embargo note printed every run |
+| Arquivo.pt keyword | **working** | `arquivo jack --keyword jack --plan pro` → 5 results (full-text, URL-filtered to the handle). `--keyword twttr` → 0 results, honest empty. JSON export needs Starter+ (free gets CSV — tier gating works) |
+| Ghostarchive | **working, now with dates** | Search page 200 (5,318 bytes); 7 captures of jack/status/20, 2022-01-14..2024-04-14; `/archive/AJzyo` → 200 live. Parser now extracts capture dates into `archived_timestamp` (`archives.py`, 2 new tests) |
+| Common Crawl | **degraded but proven end-to-end** | `collinfo.json` 200; latest crawl CC-MAIN-2026-47 (6–19 Nov 2026). Index 504s on most attempts (single URL, wildcard, CC-MAIN-2026-47 and -43). Async job flow proven: queue → 504 (honest error) → retry → **done, 134 captures for example.com** (first row 20261106154953, status 200). `jack/status/20` → empty, honest (Nov 2026 crawl has no capture of it). Async-only is the right design — never in the live path |
+| archive.today | **links-only (by policy), endpoint alive** | Timemap with `Accept: application/link-format` → 200, 38 mementos for jack/status/20. Without that header the same URL returns the HTML landing page (200, 59 KB, 0 mementos). Stays links-only: Wikipedia blacklisted it 21 Feb 2026, it 429s/CAPTCHAs — never fetched server-side in bulk, never legal evidence |
+| MemGator (local) | **working** | 127.0.0.1:1208 TimeMap for jack/status/20 → 200, 50 mementos, first 2008-11-03 |
+| MemGator (public URL) | **down** | `memgator.northforgelabs.dev` → 530 (Cloudflare 1033); egress proxy refuses CONNECT :7844. Tunnel restart is another track's job — `sources` reports it honestly as unavailable |
+| Bluesky live | **working** | getProfile `bsky.app` → 200, `did:plc:z72i7hdynmk6r22z27h6tvur`; getAuthorFeed → 5 posts; `live bluesky bsky.app` CLI returns latest posts with dates/links |
+| Mastodon live | **working** | lookup `Mastodon` → 200, id 13179, created 2016-11-23, 568 statuses; RSS → 200, valid XML (29 KB) |
+| X oEmbed | **working** | 200 (after redirect); author jack, HTML contains "just setting up my twttr" |
+| YouTube oEmbed | **working** | 200; title "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)" |
+| TikTok oEmbed | **working** | 200; JSON with embed HTML |
+| Reddit live | **dead (as expected)** | user JSON → 403. Archive-only label stays |
+
+CDX flakiness: CDX answered fine throughout this round (00:24–00:28
+UTC), after flapping the previous evening (503 / "Temporarily
+Offline" / stalls, ~20 min down at a time). Retry-once policy stands.
+
 **Ethics lines (non-negotiable, apply to every source here):** public posts
 only. No account access, no DMs, no location, no monitoring/alerts, no face
 recognition, no verdicts/scores, no minors. A source that needs *your* login
 to someone else's account is out — see §2 X/Twitter.
 
+## 0.1 Arquivo.pt as a web source (issue #8 follow-up, 2026-11-27)
+
+The web console used to search Wayback CDX only. Arquivo.pt is now a
+first-class source there (Track I, local only, unpushed):
+
+- **Endpoint `POST/GET /api/arquivo`** (`functions/api/arquivo.js`,
+  mirrors `functions/api/cdx.js`): `mode=cdx` proxies
+  `arquivo.pt/wayback/cdx` for a URL pattern + `from`/`to`/`limit`;
+  `mode=keyword` proxies `arquivo.pt/textsearch` (`q` + `handle`,
+  URL-filtered server-side). Allowlisted params only; `limit`
+  clamps to 1000; `from`/`to` must be YYYYMMDD (4-digit years get
+  an honest 400 — arquivo.pt itself accepts years, the proxy does
+  not). 5-min cache, 120 s upstream timeout → 504 "Arquivo.pt
+  didn't answer in time", other fetch errors → 502, upstream
+  non-200 forwarded. No API key — Arquivo.pt is free. The proxy
+  normalises to CDX-array shape (header row first) so the client
+  parses both archives identically; it also fixes doubled slashes
+  and enforces the date range server-side.
+- **Console selector** (`web/index.html` `#source`, `web/arquivo.js`):
+  Wayback CDX (default) / Arquivo.pt / Both. Same SearchJob
+  machinery (progress + Pause/Stop/Resume). Rows merge with dedup
+  by exact (URL, timestamp), each row labelled with its source
+  (Wayback / Arquivo.pt), per-source counts in the status line and
+  the stats. A failure in one source never kills the other — the
+  job reports per-source status honestly. Snapshot links point at
+  arquivo.pt for Arquivo rows, web.archive.org for Wayback rows
+  (CSV/JSON exports, citations, evidence packs all carry the
+  right link and a `source` field).
+- **Tier rules mirror the CLI exactly** (`licence.js` PLAN_CAPS
+  `keyword_search`, drift-tested against `plans.py` PLAN_FEATURES
+  in `tests/test_web_tiers.py`): CDX mode works on every plan;
+  keyword search is Pro+ (free/starter blocked with the "Keyword
+  search needs Pro" dialog before any fetch runs). Broad
+  (all-network) search stays Wayback-only — Arquivo.pt CDX
+  patterns exist for X, Bluesky and Mastodon only, and keyword
+  mode would need a keyword field the broad form lacks (deliberate
+  deviation, documented in TEST-REPORT.md).
+- **Honest-limits copy** (the `#source-note` under the selector +
+  the status line): ≥1-year embargo (nothing recent),
+  Portuguese-weighted coverage, keyword = URL-substring match
+  (not authorship — a match proves the URL contains the text, not
+  that the handle wrote it), per-handle listing covers X /
+  Bluesky / Mastodon only.
+- **Live probes 2026-11-27 ~02:43 UTC:** CLI `arquivo jack
+  --limit 5` → 5 results (jack status 1026984242893357056,
+  2018-08-09..14, status 200). Dev-server proxy live:
+  `/api/arquivo?mode=cdx&url=twitter.com/jack/status/*&limit=3&
+  from=20180101&to=20191231` → 3 rows, same post, 2018-08-09/
+  10/11; `/api/arquivo?mode=keyword&q=jack&handle=jack&limit=2`
+  → 1 row, `https://evatjack.com/` — the URL-substring caveat
+  in the flesh (the domain contains "jack"; it is not jack's
+  post). **CORS: arquivo.pt sends `Access-Control-Allow-Origin:
+  *`** on both endpoints, so direct browser calls work — the
+  proxy is still primary on the deployed site (same-origin,
+  Turnstile-checked, cached).
+- **Rate-limit caveat:** 250 req/60 s per IP on both endpoints.
+  Through the proxy every visitor shares the Pages Function's
+  egress IP, so heavy site-wide use can hit the cap — the proxy
+  surfaces that as an honest 502/504, never fake rows. If the cap
+  bites in production, the fix is per-IP queueing or a second
+  egress, not a paid plan (free sources only until customers).
+- **Host-alias dedup (Track K item 3, 2026-11-27 — web side DONE):**
+  the merge step no longer dedupes by exact (URL, timestamp).
+  `web/url-alias.js` canonicalises the host before the key is
+  built, so the same post stored under twitter.com by one archive
+  and x.com by the other renders once in Both mode (Wayback wins
+  the tie — it runs first). Different timestamps stay separate
+  captures, so the stats range is preserved. Applied in the three
+  places that held the exact key: `console.js` `addRow`, `batch.js`,
+  `diff.js`; each falls back to the exact key if `url-alias.js`
+  failed to load. Alias map (host-level only — two hostnames are
+  aliases only when the same path means the same post):
+  `x.com → twitter.com` (canonical: twitter.com — the bulk of the
+  archive predates the 2023 rename); `www.` stripped and the host
+  lowercased for every URL. Deliberately NOT mapped: `youtu.be` vs
+  `youtube.com` (different path shapes — `youtu.be/<id>` vs
+  `youtube.com/watch?v=<id>` — host normalisation alone could not
+  dedupe those). Tests: `web/url-alias.test.js` 13/13 +
+  `web/arquivo.test.js` Both + x.com / www blocks (36 checks total).
+  **Still open (follow-up):** the CLI dedupes the same exact way
+  (`wayback_social` merge — identical (URL, timestamp) key), so the
+  same post can still appear twice in CLI output; and broad search
+  (`modes.js` `checkNetwork`) counts both X patterns (twitter.com
+  + x.com) — see TEST-REPORT.md Track K follow-ups.
+- **Still CLI-only (next follow-ups):** replay-text fetch in
+  the browser, batch watchlists / scheduled re-runs. Server-side
+  evidence counting is BUILT locally (endpoint + dashboard wiring,
+  Track F + Track L) but not live — migrations 0003/0004 are
+  unapplied (need John's approval tap) and the live site is still
+  v1.3. Ghostarchive + Common Crawl as web sources are DONE
+  (Track L, §0.2/§0.3 below) — they left this list 2026-11-27.
+
+## 0.2 Ghostarchive as a web source (issue #8 follow-up, 2026-11-27)
+
+Ghostarchive is now a third source in the web console (Track L,
+local only, unpushed), after Arquivo.pt (§0.1):
+
+- **Endpoint `GET /api/ghostarchive`** (`functions/api/
+  ghostarchive.js`, mirrors `functions/api/arquivo.js`): proxies
+  `ghostarchive.org/search?term=<url>` for a URL or prefix +
+  `from`/`to`/`limit`. Allowlisted params only; `limit` clamps
+  to 1000; `from`/`to` must be YYYYMMDD. 5-min cache, 120 s
+  upstream timeout → 504 "Ghostarchive didn't answer in time",
+  other fetch errors → 502, upstream non-200 forwarded. No API
+  key — Ghostarchive is free. The Function scrapes the search
+  page server-side (a server fetch has no browser CORS issue)
+  and parses the results table exactly like the CLI does
+  (`wayback_social/archives.py` `search_ghostarchive`): one row
+  per capture, an `/archive/<id>` link plus a capture date in
+  the next cell (RFC 1123 → YYYYMMDDHHMMSS). Rows return in
+  CDX-array shape (header row first) plus a Ghostarchive-only
+  8th column: the `/archive/<id>` id — a Ghostarchive snapshot
+  link cannot be built from (timestamp, URL) the way
+  Wayback/Arquivo.pt links can. Rows without a parsable date
+  keep an empty timestamp, never a faked one; when a date range
+  is given, undated rows are dropped server-side (they cannot
+  be proven in range).
+- **Console selector** (`web/index.html` `#source`,
+  `web/ghostarchive.js`): Wayback CDX (default) / Arquivo.pt /
+  Ghostarchive / Common Crawl / All archives. Same SearchJob
+  machinery (progress + Pause/Stop/Resume). Rows merge with the
+  console's shared dedup (alias-aware since Track K — a
+  Ghostarchive row for a twitter.com URL and a Wayback row for
+  the same post under x.com render once), each row labelled with
+  its source, per-source counts in the status line and the stats.
+  A failure in one source never kills the other. Snapshot links
+  point at `ghostarchive.org/archive/<id>` for Ghostarchive rows
+  (CSV/JSON exports, citations, evidence packs all carry the
+  right link and a `source` field).
+- **Per-handle patterns: X and Bluesky only.** Ghostarchive
+  treats the term as a prefix: `twitter.com/jack/status/`
+  returns captures under that prefix; `bsky.app/profile/<handle>
+  /post/` the same. Mastodon / Instagram / TikTok prefixes
+  redirect to Ghostarchive's video search (`/vidsearch`), which
+  has no results table — so those networks have no per-handle
+  Ghostarchive listing and the console says so honestly instead
+  of running a doomed query. Broad (all-network) search stays
+  Wayback-only (deliberate, same as Arquivo.pt).
+- **Honest-limits copy** (the `#source-note` under the selector
+  + the status line): Ghostarchive coverage is uneven by
+  network — it holds captures Wayback and Arquivo.pt missed,
+  and misses plenty they hold. An empty result here is an
+  honest "not in this archive", never a bug. Dates come from
+  the results table; an undated row is shown undated.
+- **Live probes 2026-11-27 05:34–05:43 UTC:** direct search
+  page `twitter.com/jack/status/20` → 7 captures with dates
+  (2022-01-14..2024-04-14, matches the CLI); prefix
+  `twitter.com/jack/status/` → 14 archive links;
+  `bsky.app/profile/bsky.app/post/` → 16 unique links;
+  `mastodon.social/@Mastodon/`, `instagram.com/nasa/`,
+  `tiktok.com/@tiktok/video/` → all 302 to `/vidsearch`
+  (0 archive links). Dev-server proxy live:
+  `/api/ghostarchive?url=twitter.com/jack/status/20` → 200 in
+  1.5 s, 7 rows, 2022-01-14..2024-04-14; prefix + `limit=3` →
+  200, 3 rows, oldest first.
+- **Rate-limit caveat:** Ghostarchive is a small volunteer
+  project with no published limit and no SLA. The proxy sends
+  one request per search with a `wayback-social/1.0` UA; a 429
+  surfaces as an honest error, never fake rows. No bulk use.
+
+## 0.3 Common Crawl as a web source (issue #8 follow-up, 2026-11-27)
+
+Common Crawl is now a fourth source in the web console (Track L,
+local only, unpushed). Async by design — the index is slow and
+flaky, and the web path respects that instead of pretending
+otherwise:
+
+- **Endpoint `GET /api/commoncrawl`** (`functions/api/
+  commoncrawl.js`, mirrors `functions/api/arquivo.js`): proxies
+  `index.commoncrawl.org/<crawl>-index?url=<pattern>&output=json`
+  for a URL pattern + `from`/`to`/`limit` + `crawl` (validated
+  `^CC-MAIN-\d{4}-\d{2}$`, default `CC-MAIN-2026-47` — the same
+  default as the CLI; `scripts/sync_config.py` checks the web
+  config, the Function default and the CLI default agree).
+  Allowlisted params only; `limit` clamps to 1000; `from`/`to`
+  must be YYYYMMDD. 5-min cache. No API key — Common Crawl is
+  free. **The `*` is stripped before the query:** with
+  `matchType=prefix` the index wants the bare prefix, not the
+  wildcard (verified live 2026-11-27:
+  `url=example.com/*&matchType=prefix` → 404,
+  `url=example.com&matchType=prefix` → 200, 278 rows). A bare
+  URL is queried exact (no `matchType`). Rows return in
+  CDX-array shape (header row first) plus a Common-Crawl-only
+  8th column: the crawl id.
+- **Retry (the async design):** up to 3 attempts, 15 s per
+  attempt, backoff 2 s then 8 s (worst ~55 s — inside the
+  client's 120 s SearchJob bound; a Pages Function waiting on
+  I/O does not burn CPU). A 404 is definitive ("no captures")
+  and returns header-only immediately — not retried, not an
+  error. After all attempts fail, the answer is an honest 504
+  (timeouts) or 502 (last upstream status), never fake rows.
+  The client wires it into the existing SearchJob machinery
+  (progress + Pause/Stop/Resume, same as the Arquivo path).
+- **Console selector** (`web/index.html` `#source`,
+  `web/commoncrawl.js`): same five-way selector as §0.2.
+  Common Crawl runs last in "All archives" mode (it is the
+  slowest source). Rows merge with the console's shared dedup,
+  each row labelled, per-source counts in the status line. A
+  failure in one source never kills the other.
+- **The index has no replay URL.** A Common Crawl capture is a
+  WARC record, not a browsable snapshot: the archive link for a
+  row points at the index record itself
+  (`index.commoncrawl.org/<crawl>-index?url=<orig>&output=json`),
+  honestly labelled in the UI. Never link a Wayback capture
+  that may not exist. Per-handle patterns exist for all 14
+  networks (the index answers URL-prefix queries for any host);
+  a 404 for a network is an honest empty, not a failure. Broad
+  search stays Wayback-only (deliberate, same as the others).
+- **Live probes 2026-11-27 05:37–05:43 UTC:** direct index
+  `example.com` → 200, 134 rows (third attempt 200 in 6.7 s,
+  only 36 rows — nondeterministic sharding/pagination);
+  `example.com&matchType=prefix` → 200, 278 rows;
+  `twitter.com/jack/status/20` → 404, honest empty (the Nov
+  2026 crawl has no capture of it). Dev-server proxy live:
+  `/api/commoncrawl?url=example.com` → 200 in 10.0 s, 50 rows
+  (the default limit), crawl `CC-MAIN-2026-47` — the 10 s
+  means the first attempt stalled and the retry succeeded, the
+  retry machinery working end-to-end;
+  `/api/commoncrawl?url=twitter.com/jack/status/*` → 200 in
+  6.2 s, header-only (honest empty, wildcard stripped
+  correctly).
+
 ## 1. Other archive sources (besides Wayback CDX, our baseline)
 
 | Source | What it covers | Access / limits | Can it find what Wayback missed? |
 |---|---|---|---|
-| **archive.today** (archive.ph/.is/.md/.fo) | Any URL a human chose to save; renders JS in a real browser, so X/IG posts often read where Wayback replays are blank shells | **No official API.** Memento TimeMap `archive.ph/timemap/<url>` works; save via `POST archive.ph/submit/`. Aggressively 429s + CAPTCHAs. **Verified 2026-11-26: timemap request timed out after 25 s from this VM.** Community libs: `archivetoday` (npm), `archive-is-pp-cli` | Yes, often — but only as an **outbound link** (user clicks through). Never fetch it server-side in bulk; never use it for legal evidence — Wikipedia blacklisted it 21 Feb 2026 after DDoS/tampering evidence (cited: printingpress.dev) |
-| **Ghostarchive** | YouTube, X, Instagram, Facebook posts; saves playable video (≤360p, 100 MB) | No API. Search page only. **Verified: `ghostarchive.org/search?term=<url>` returns 200**; result parsing not yet verified — treat as outbound link first | Yes for video + social posts other archives miss. Small volunteer project — no bulk use, no SLA |
-| **Arquivo.pt** | Portuguese web since 1996, ~23 B files; **only archive with real full-text search** (phrase, date range, `site:`) | Free public API, no key. Full-text + URL search: **250 req/60 s/IP**; CDX: 250/60 s; Memento: 400/60 s. **Verified: CDX query for `twitter.com/jack/status/20` returned 200 with a 2010 capture.** **Embargo ≥1 year** — nothing recent. PT-centric; international pages only if linked from PT pages | Yes for **keyword search** — the one thing CDX cannot do. Best as the Pro-tier keyword fallback, labelled "Arquivo.pt (≥1 yr old, PT-weighted)" |
-| **Common Crawl** | Monthly broad crawl since 2008, hundreds of TB; URL-indexed (CDX server + columnar/Parquet index on Hugging Face since Apr 2026) | Free, no key. CDX index API `index.commoncrawl.org/<crawl>-index?url=<pattern>&output=json`. **Verified: `collinfo.json` 200 (latest crawl CC-MAIN-2026-47, 6–19 Nov 2026). Index query for `twitter.com/jack/status/20` → 504 gateway timeout; retry also failed.** Keep <10 req/s (expect 503 SlowDown). Respects robots.txt — JS-heavy social pages are thin | Sometimes: captures from crawl months Wayback missed, and WARC byte-range fetch gives raw HTML. Slow/flaky — **async background job only**, never in the live search path |
+| **archive.today** (archive.ph/.is/.md/.fo) | Any URL a human chose to save; renders JS in a real browser, so X/IG posts often read where Wayback replays are blank shells | **No official API.** Memento TimeMap `archive.ph/timemap/<url>` works **only with `Accept: application/link-format`** — without it the same URL returns the HTML landing page (verified 2026-11-27: with header 200 + 38 mementos for jack/status/20; without header 200 HTML, 0 mementos). Save via `POST archive.ph/submit/`. Aggressively 429s + CAPTCHAs. Community libs: `archivetoday` (npm), `archive-is-pp-cli` | Yes, often — but only as an **outbound link** (user clicks through). Never fetch it server-side in bulk; never use it for legal evidence — Wikipedia blacklisted it 21 Feb 2026 after DDoS/tampering evidence (cited: printingpress.dev) |
+| **Ghostarchive** | YouTube, X, Instagram, Facebook posts; saves playable video (≤360p, 100 MB) | No API. Search page only. **Verified live 2026-11-27: search 200; 7 captures of jack/status/20 (2022-01-14..2024-04-14), `/archive/<id>` links resolve 200; parser extracts capture dates into `archived_timestamp`** (archives.py) | Yes for video + social posts other archives miss. Small volunteer project — no bulk use, no SLA |
+| **Arquivo.pt** | Portuguese web since 1996, ~23 B files; **only archive with real full-text search** (phrase, date range, `site:`) | Free public API, no key. Full-text + URL search: **250 req/60 s/IP**; CDX: 250/60 s; Memento: 400/60 s. **Verified live 2026-11-27: CDX `arquivo jack` → 5 results (jack status 1026984242893357056, Aug 2018, status 200); keyword `jack` (Pro) → 5 results; keyword `twttr` → 0, honest empty.** **Embargo ≥1 year** — nothing recent. PT-centric; international pages only if linked from PT pages | Yes for **keyword search** — the one thing CDX cannot do. Best as the Pro-tier keyword fallback, labelled "Arquivo.pt (≥1 yr old, PT-weighted)" |
+| **Common Crawl** | Monthly broad crawl since 2008, hundreds of TB; URL-indexed (CDX server + columnar/Parquet index on Hugging Face since Apr 2026) | Free, no key. CDX index API `index.commoncrawl.org/<crawl>-index?url=<pattern>&output=json`. **Verified live 2026-11-27: `collinfo.json` 200 (latest crawl CC-MAIN-2026-47, 6–19 Nov 2026). Index 504s on most attempts (single URL, wildcard, CC-MAIN-2026-47 and -43) but answers in windows: async job queue → 504 → retry → done, 134 captures for example.com; jack/status/20 → empty, honest.** Keep <10 req/s (expect 503 SlowDown). Respects robots.txt — JS-heavy social pages are thin | Sometimes: captures from crawl months Wayback missed, and WARC byte-range fetch gives raw HTML. Slow/flaky — **async background job only**, never in the live search path |
 | **Memento Time Travel** (timetravel.mementoweb.org) | Aggregator across archives (Wayback, archive.today, UKWA…) via RFC 7089 | **DEAD. Verified 2026-11-26: connection fails (curl 52, empty reply).** Project concluded 5 Sep 2025 (Wikipedia). Do not call it from any code path | No — replace with **MemGator** (see §3): self-hosted Go aggregator that queries each archive's own TimeMap |
 | **UK Web Archive** | UK websites, British Library | **Offline — cyber-attack** (Archive Query Log list, 2026). **Verified: `webarchive.org.uk` returns 403 "Under Maintenance".** No usable API right now | No, until it returns. Fallback: **UK Government Web Archive** (nationalarchives.gov.uk, gov.uk sites back to ~2003, Wayback-style viewer, no API) |
 | **perma.cc** (Harvard Library Innovation Lab) | Pages preserved as legal/academic citations; short perma links, replayable | Free public API for lookups (api.perma.cc). **Verified attempt: API unreachable from this VM (curl 52)** — status unverified, re-probe before building on it | Niche: only helps when a perma link already exists (court papers, articles). Outbound-link tier only |
@@ -101,9 +381,9 @@ scraping, face recognition, monitoring/alerts, DMs, location, minors.
 |---|---|---|---|
 | Wayback CDX | `archive x jack --limit 2` | ≥1 capture; oEmbed text "just setting up my twttr" | Retry once (archive.org is slow/flaky); then "archive.org didn't answer" |
 | Arquivo.pt CDX | `curl arquivo.pt/wayback/cdx?url=twitter.com/jack/status/20` | 200 + ≥1 row (verified: 2010 capture) | Label "Arquivo.pt unavailable", keep Wayback result |
-| Common Crawl | `collinfo.json` 200; index query `reddit.com/r/dataisbeautiful/*` | Rows returned, or honest 504/timeout surfaced as "degraded" | Async retry once; never block the search on it |
-| archive.today | Timemap for jack/status/20 | Returns mementos, or honest "didn't answer in 25 s" | Outbound link only; never a fake "0 snapshots" |
-| Ghostarchive | Search page for jack/status/20 | 200; parse results only if result links present | Outbound link only |
+| Common Crawl | `collinfo.json` 200; `cc <url>` queue → `--check` | Job ends done (rows) or empty (honest), or error on 504; retry once catches a good window (verified 2026-11-27: example.com → done, 134 captures) | Async retry once; never block the search on it |
+| archive.today | Timemap for jack/status/20 with `Accept: application/link-format` | 200 + mementos (38 verified 2026-11-27); without the header it returns HTML, not a TimeMap | Outbound link only; never a fake "0 snapshots" |
+| Ghostarchive | Search page for jack/status/20 | 200; 7 captures with dates parsed (verified 2026-11-27); `/archive/<id>` resolves 200 | Outbound link only until a capture is verified by opening it |
 | Bluesky live | getProfile `bsky.app` → `did:plc:z72i7hdynmk6r22z27h6tvur`; getAuthorFeed → ≥1 post | 200 both | "Bluesky didn't answer" — diff shows "unknown", not "deleted" |
 | Mastodon live | lookup `Mastodon` → id `13179`; RSS → valid XML | 200 both | Same as Bluesky |
 | Reddit live | user JSON | **Expect 403** — test asserts the honest label, not data | Label stays "archive only" |

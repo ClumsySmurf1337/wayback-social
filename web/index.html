@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>wayback-social — Find deleted tweets & posts in the Wayback Machine</title>
-<meta name="description" content="Search the Wayback Machine for archived posts from X, Instagram, TikTok, YouTube, Reddit, Bluesky and more. Find deleted tweets — Pro $19 one-time.">
-<meta name="keywords" content="wayback machine social media search, find deleted tweets, deleted instagram posts archive, catfish check archived posts, deleted posts archive, wayback machine search, archived tweets">
+<!-- Static copy uses the umbrella brand ArchiveCheck (docs/naming-v2.md).
+  branding.js swaps title / meta / wordmark per subdomain at runtime,
+  and the Pages Function HTMLRewriter middleware injects the
+  per-subdomain brand server-side — the static text here is only the
+  fallback for crawlers and no-JS visitors, never the repo name. -->
+<title>ArchiveCheck — Find deleted posts & check any profile in the archive</title>
+<meta name="description" content="Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more — Wayback Machine, Arquivo.pt, Common Crawl and live APIs. Free search; packs from $9.">
+<meta name="keywords" content="find deleted tweets, deleted instagram posts archive, catfish check archived posts, deleted posts archive, archived tweets, web archive search, arquivo.pt, common crawl social media search, wayback machine social media search">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://wayback-social.pages.dev/">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="wayback-social">
-<meta property="og:title" content="wayback-social — Find deleted posts in the Wayback Machine">
-<meta property="og:description" content="Archived posts from 14 networks. Deleted-only diff, batch mode, CSV/JSON/HTML export. Free search; one-time packs from $9.">
-<meta property="og:url" content="https://wayback-social.pages.dev/">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="ArchiveCheck — Find deleted posts & check any profile in the archive">
+<meta property="og:description" content="Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more — Wayback Machine, Arquivo.pt, Common Crawl and live APIs. Free search; packs from $9.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="wayback-social — Find deleted posts in the Wayback Machine">
-<meta name="twitter:description" content="Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more. Free search; Pro $19 one-time (launch).">
+<meta name="twitter:title" content="ArchiveCheck — Find deleted posts & check any profile in the archive">
+<meta name="twitter:description" content="Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more — Wayback Machine, Arquivo.pt, Common Crawl and live APIs. Free search; packs from $9.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"wayback-social","applicationCategory":"UtilitiesApplication","operatingSystem":"Web, Windows, macOS, Linux","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"9","priceCurrency":"USD","name":"Starter"},{"@type":"Offer","price":"19","priceCurrency":"USD","name":"Pro Pack"},{"@type":"Offer","price":"49","priceCurrency":"USD","name":"Studio"},{"@type":"Offer","price":"59","priceCurrency":"USD","name":"All-in Bundle"},{"@type":"Offer","price":"15","priceCurrency":"USD","name":"Text-fetch top-up (500 credits)"}],"description":"Search the Wayback Machine for archived social media posts from 14 networks, find deleted posts, and export evidence packs."}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ArchiveCheck","applicationCategory":"UtilitiesApplication","operatingSystem":"Web, Windows, macOS, Linux","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"9","priceCurrency":"USD","name":"Starter"},{"@type":"Offer","price":"19","priceCurrency":"USD","name":"Pro Pack"},{"@type":"Offer","price":"49","priceCurrency":"USD","name":"Studio"},{"@type":"Offer","price":"59","priceCurrency":"USD","name":"All-in Bundle"},{"@type":"Offer","price":"15","priceCurrency":"USD","name":"Text-fetch top-up (500 credits)"}],"description":"Search archived posts from X, Instagram, TikTok, YouTube, Reddit and more — Wayback Machine, Arquivo.pt, Common Crawl and live APIs. Free search; packs from $9."}
 </script>
+<link rel="stylesheet" href="vendor/flatpickr/flatpickr.min.css">
+<link rel="stylesheet" href="vendor/flatpickr/dark.css">
 <style>
 :root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#7c8cff;--accent2:#4ade80;--warn:#fbbf24}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
@@ -53,39 +60,200 @@ th{color:var(--muted)}td a{word-break:break-all}
 #notice{color:var(--warn)}footer{max-width:1020px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
 dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:420px}
 dialog::backdrop{background:rgba(0,0,0,.6)}
+/* Search-job progress + controls (web/search-job.js) */
+#job-progress{margin:14px 0 0}
+#job-bar,#batch-bar,#diff-bar{height:8px;background:#0f1220;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+#job-fill,#batch-fill,#diff-fill{height:100%;width:0%;background:var(--brand-accent,#1F9D63);transition:width .3s}
+#job-text,#batch-text,#diff-text{margin:6px 0 0;font-size:13px;color:var(--muted)}
+#job-progress .btn2,#batch-progress .btn2,#diff-progress .btn2{padding:8px 14px;font-size:14px;margin:8px 6px 0 0}
+#job-progress .btn2:disabled,#batch-progress .btn2:disabled,#diff-progress .btn2:disabled{opacity:.4;cursor:default}
+/* Toasts (search-job.js showToast) */
+#toasts{position:fixed;right:16px;bottom:16px;max-width:min(420px,90vw);z-index:50}
+.toast{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.toast-warn{border-left-color:var(--warn)}
+.toast-error{border-left-color:#e5484d}
+/* Honest-limits box under the presets (issue #9): the preset's own
+ * ethics line + the universal limits. Filled by modes.js. */
+.limits-box{border:1px solid var(--line);border-left:4px solid var(--brand-accent,#1F9D63);background:#0f1220;border-radius:10px;padding:12px 16px;margin:12px 0 0;font-size:14px;color:var(--muted);line-height:1.6}
+.limits-box b{color:var(--text)}
+/* Footer nav: the footer element itself is rewritten server-side per
+ * brand (functions/_middleware.js SetText), so links live here, above
+ * it. NOTE: never write a literal tag name inside a style comment —
+ * the test-only HTMLRewriter shim misparses it as a real element and
+ * eats the page body (issue #9). */
+.footernav{max-width:1020px;margin:0 auto;padding:8px 20px 0;color:var(--muted);font-size:13px}
+/* Date fields: flatpickr alt input + a clear button */
+.date-wrap{display:flex;gap:6px;align-items:center}
+.date-wrap input{flex:1;min-width:0}
+.date-clear{flex:0 0 auto;padding:10px 12px;font-size:14px}
+.flatpickr-calendar{background:#171b2e;border-color:#2a3050;color:#eef0ff}
+.flatpickr-day{color:#eef0ff}.flatpickr-day:hover{background:#2a3050}
+.flatpickr-day.selected{background:var(--brand-accent,#1F9D63);border-color:var(--brand-accent,#1F9D63)}
+.flatpickr-day.today{border-color:var(--brand-accent,#1F9D63)}
+.flatpickr-months .flatpickr-month,.flatpickr-weekdays,.flatpickr-weekday{color:#eef0ff;background:#171b2e}
+.flatpickr-current-month .numInputWrapper input{color:#eef0ff}
 </style>
+<style>h1 span{color:var(--brand-accent,#1F9D63)}</style>
+<style>.preset[aria-pressed="true"]{border-color:var(--brand-accent,#1F9D63);color:var(--brand-accent,#1F9D63)}</style>
+<script src="branding.js"></script>
 </head>
 <body>
 <header>
-  <h1>wayback<span>-social</span></h1>
-  <p class="sub">Archived posts from the Wayback Machine — for <b>every</b> social network, not just Twitter. Search below, or get the Pro Pack and archive whole watchlists at once.</p>
+  <h1>Archive<span>Check</span></h1>
+  <p class="sub">Check the archive before you trust the profile.</p>
+  <p class="muted">Sources: live search on this page checks the Wayback Machine, Arquivo.pt, Ghostarchive and Common Crawl — pick one or all below. Other sources — multi-archive TimeMaps (MemGator), and live Bluesky, Mastodon and YouTube posts — are covered by the full ArchiveCheck product, not by this page.</p>
   <p><span class="pill good">X · Reddit · Bluesky · Mastodon — good archive</span> <span class="pill">Instagram · TikTok · YouTube · Threads — moderate</span> <span class="pill poor">LinkedIn · Pinterest — thin</span></p>
+  <p><span class="pill" id="tier-badge">Free tier — 25 captures/search</span> <a href="dashboard.html">My dashboard</a> · <a href="#licence">Enter licence key</a></p>
+  <p id="auth-area"><span class="muted">Sign-in loading…</span></p>
 </header>
 <main>
+  <section class="card" id="presets">
+    <h2 style="margin-top:0">What will you check?</h2>
+    <p class="muted">Pick a starting point — each preset loads the console with the right search. Same tool, same archive, same limits.</p>
+    <p>
+      <button class="btn2 preset" data-preset="catfish">Catfish check</button>
+      <button class="btn2 preset" data-preset="relationship">Relationship trust check</button>
+      <button class="btn2 preset" data-preset="brand">Brand monitoring</button>
+      <button class="btn2 preset" data-preset="hiring">Hiring screen</button>
+      <button class="btn2 preset" data-preset="legal">Evidence preservation</button>
+      <button class="btn2 preset" data-preset="journalist">Journalist / OSINT</button>
+      <button class="btn2 preset" data-preset="researcher">Researcher</button>
+    </p>
+    <p class="muted" id="preset-desc">Public archived posts only — a match proves a post existed on a date, not who wrote it or why it was deleted. Found ≠ guilty. Not found ≠ not real.</p>
+    <p class="limits-box" id="preset-limits"><b>Honest limits:</b> Public archived posts only. No private messages, no account access, no location tracking, no real-time monitoring, no face recognition, no verdicts, no minors. Found ≠ guilty. Not found ≠ not real. <a href="trust.html">Trust &amp; safety</a></p>
+  </section>
+
   <section class="card" id="search">
-    <h2 style="margin-top:0">Search the archive</h2>
+    <h2 style="margin-top:0" id="search-hero">Search the archive</h2>
     <div class="row">
       <div><label>Network</label><select id="network"></select></div>
       <div><label>Handle / username (no @)</label><input id="handle" placeholder="jack" value="jack"></div>
-      <div><label>Limit (Free: up to 25)</label><input id="limit" type="number" value="20" min="1" max="1000"></div>
+      <div><label id="limit-label">Limit (Free: up to 25)</label><input id="limit" type="number" value="20" min="1" max="1000"></div>
     </div>
     <div class="row">
-      <div><label>From (YYYYMMDD, optional)</label><input id="from" placeholder="20200101"></div>
-      <div><label>To (YYYYMMDD, optional)</label><input id="to" placeholder="20231231"></div>
+      <div><label>Or a single post URL — check one post, any network</label><input id="post-url" placeholder="https://x.com/jack/status/20" autocomplete="off"></div>
+    </div>
+    <p class="muted">Paste a full post URL to check that one post instead of a whole handle — the network is detected from the link. Works on every plan, like a handle search; only the captures-per-search cap applies (Free: 25). Leave it empty to search by handle. A post URL and a keyword can't be searched together.</p>
+    <p><label style="display:inline"><input type="checkbox" id="broad" style="width:auto"> All networks — check this handle on every network (Free: 3 networks · Starter: 7 · Pro / Studio: all 14)</label></p>
+    <div class="row">
+      <div><label>Archive source</label><select id="source">
+        <option value="wayback" selected>Wayback Machine (CDX)</option>
+        <option value="arquivo">Arquivo.pt</option>
+        <option value="ghostarchive">Ghostarchive</option>
+        <option value="commoncrawl">Common Crawl</option>
+        <option value="both">All archives</option>
+      </select></div>
+      <div><label>Keyword — Arquivo.pt full-text (Pro)</label><input id="keyword" placeholder="e.g. twttr" disabled></div>
+    </div>
+    <p class="muted" id="source-note">Wayback Machine (CDX) — the main archive; the broadest coverage by network.</p>
+    <div class="row">
+      <div><label>From (optional) — pick a date</label><div class="date-wrap"><input id="from" placeholder="20200101" inputmode="numeric"><button type="button" class="btn2 date-clear" id="from-clear" title="Clear the From date">×</button></div></div>
+      <div><label>To (optional) — pick a date</label><div class="date-wrap"><input id="to" placeholder="20231231" inputmode="numeric"><button type="button" class="btn2 date-clear" id="to-clear" title="Clear the To date">×</button></div></div>
       <div><label>&nbsp;</label><button class="btn" id="go" style="width:100%">Search archive</button></div>
     </div>
     <p style="margin:12px 0 0"><button class="btn2" id="demo">Try a demo search (jack, X)</button>
-    <span class="muted">Live search talks directly to web.archive.org (CDX API). It can take 20–60s — archive.org is slow. No account, nothing is uploaded.</span></p>
+    <span class="muted">Live search runs through this site's archive proxy and can take 20–60s — archive.org is slow. No account, nothing is uploaded.</span></p>
+    <div id="turnstile-widget"></div>
+    <div id="job-progress" hidden>
+      <div id="job-bar"><div id="job-fill"></div></div>
+      <p id="job-text"></p>
+      <button type="button" class="btn2" id="job-pause">Pause</button>
+      <button type="button" class="btn2" id="job-stop">Stop</button>
+      <button type="button" class="btn2" id="job-resume">Resume</button>
+    </div>
     <p id="status" class="muted"></p>
     <p id="notice"></p>
+    <p id="fail-actions" hidden><button class="btn2" id="retry">Retry search</button> <button class="btn2" id="sample">Load a verified sample instead</button> <a id="cdx-link" href="#" target="_blank" rel="noopener">Open this query on web.archive.org</a></p>
     <div class="stats" id="stats"></div>
-    <div style="overflow-x:auto"><table id="results" hidden><thead><tr><th>Archived</th><th>Post</th><th>Archived snapshot</th><th>Status</th></tr></thead><tbody></tbody></table></div>
-    <p id="actions" hidden><button class="btn2" id="csv">Download CSV</button> <button class="btn2" id="json">Download JSON</button></p>
+    <div id="broad-results"></div>
+    <div style="overflow-x:auto"><table id="results" hidden><thead><tr><th>Archived</th><th>Post</th><th>Archived snapshot</th><th>Status</th><th>Source</th></tr></thead><tbody></tbody></table></div>
+    <p id="actions" hidden><button class="btn2" id="csv">Download CSV</button> <button class="btn2" id="json">Download JSON</button> <button class="btn2 evidence-pack-btn">Evidence pack (Studio)</button></p>
+  </section>
+
+  <section class="card" id="osint-tools">
+    <h2 style="margin-top:0">Research tools — batch, deleted diff, citations</h2>
+    <p class="muted">For teams, researchers and newsrooms. Batch runs the same archive search across many handles; deleted diff checks each post live and marks it live / deleted / unknown; citations turn the results on screen into a citable list. Same archive, same tier caps, same honest limits — <a href="trust.html">Trust &amp; safety</a>.</p>
+    <p><button class="btn2" id="osint-toggle" aria-pressed="false">Research tools — batch, deleted diff, citations</button></p>
+    <div id="osint-panels" hidden>
+      <p>
+        <button class="btn2" data-osint-tab="batch" aria-pressed="true">Batch</button>
+        <button class="btn2" data-osint-tab="diff" aria-pressed="false">Deleted diff</button>
+        <button class="btn2" data-osint-tab="citations" aria-pressed="false">Citations</button>
+      </p>
+
+      <div id="osint-panel-batch">
+        <p class="muted">One target per line: <code>NETWORK @handle</code> — e.g. <code>x jack</code>, <code>instagram nasa</code>. Lines starting with <code>#</code> are comments. Your tier runs up to its batch cap at a time (Free: 3 · Starter: 10 · Pro: 50 · Studio: 200) — extra lines wait for the next run.</p>
+        <label>Targets</label>
+        <textarea id="batch-lines" rows="6" placeholder="x jack&#10;instagram nasa&#10;bluesky bsky.app" style="width:100%"></textarea>
+        <div class="row">
+          <div><label>Captures per target</label><input id="batch-limit" type="number" value="20" min="1" max="1000"></div>
+          <div><label>&nbsp;</label><button class="btn" id="batch-go" style="width:100%">Run batch</button></div>
+        </div>
+        <div id="batch-progress" hidden>
+          <div id="batch-bar"><div id="batch-fill"></div></div>
+          <p id="batch-text"></p>
+          <button type="button" class="btn2" id="batch-pause">Pause</button>
+          <button type="button" class="btn2" id="batch-stop">Stop</button>
+          <button type="button" class="btn2" id="batch-resume">Resume</button>
+        </div>
+        <p id="batch-status" class="muted"></p>
+        <div id="batch-results"></div>
+        <p id="batch-actions" hidden><button class="btn2" id="batch-csv">Download CSV</button> <button class="btn2" id="batch-json">Download JSON</button> <button class="btn2 evidence-pack-btn">Evidence pack (Studio)</button></p>
+      </div>
+
+      <div id="osint-panel-diff" hidden>
+        <p class="muted">One handle, one network — each archived post is checked live and marked <b>live</b>, <b>deleted</b>, or <b>unknown</b>. Unknown means the live site was login-walled or errored — it is never counted as deleted. Every row keeps its Wayback snapshot link. Deleted diff is a Starter feature (free tier: search + CSV only).</p>
+        <div class="row">
+          <div><label>Network</label><select id="diff-network"></select></div>
+          <div><label>Handle / username (no @)</label><input id="diff-handle" placeholder="jack" value="jack"></div>
+        </div>
+        <div class="row">
+          <div><label>From (optional) — YYYYMMDD</label><input id="diff-from" placeholder="20200101" inputmode="numeric"></div>
+          <div><label>To (optional) — YYYYMMDD</label><input id="diff-to" placeholder="20231231" inputmode="numeric"></div>
+          <div><label>&nbsp;</label><button class="btn" id="diff-go" style="width:100%">Run deleted diff</button></div>
+        </div>
+        <p><label style="display:inline"><input type="checkbox" id="diff-only-deleted" style="width:auto"> Only deleted — show deleted posts only</label></p>
+        <div id="diff-progress" hidden>
+          <div id="diff-bar"><div id="diff-fill"></div></div>
+          <p id="diff-text"></p>
+          <button type="button" class="btn2" id="diff-pause">Pause</button>
+          <button type="button" class="btn2" id="diff-stop">Stop</button>
+          <button type="button" class="btn2" id="diff-resume">Resume</button>
+        </div>
+        <p id="diff-status" class="muted"></p>
+        <div style="overflow-x:auto"><table id="diff-table" hidden><thead><tr><th>Archived</th><th>Post</th><th>Snapshot</th><th>Live</th></tr></thead><tbody id="diff-results"></tbody></table></div>
+        <p id="diff-actions" hidden><button class="btn2" id="diff-csv">Download CSV</button> <button class="btn2" id="diff-json">Download JSON</button> <button class="btn2 evidence-pack-btn">Evidence pack (Studio)</button></p>
+      </div>
+
+      <div id="osint-panel-citations" hidden>
+        <p class="muted">Build a citable list from the results already on screen — a deleted-diff run's verdicts, or a plain search's captures. Each citation carries the archived URL, the Wayback timestamp, the snapshot link, the live verdict, and the retrieval date.</p>
+        <p class="limits-box"><b>Triage, not court-ready.</b> Found ≠ guilty. Not found ≠ not real. A citation proves a post existed on the archived date — not who wrote it, why it was deleted, or intent. Verify each snapshot yourself at web.archive.org before relying on it in a filing.</p>
+        <p><label style="display:inline"><input type="checkbox" id="cite-live" style="width:auto"> Include live verdicts — check each post live now (takes a few seconds)</label></p>
+        <p><button class="btn" id="cite-build">Build citation list</button></p>
+        <p id="cite-status" class="muted"></p>
+        <label>Citation list — copy the text, or download it below</label>
+        <textarea id="cite-output" rows="10" readonly style="width:100%"></textarea>
+        <p id="cite-actions" hidden><button class="btn2" id="cite-copy">Copy to clipboard</button> <button class="btn2" id="cite-md">Download .md</button> <button class="btn2" id="cite-csv">Download .csv</button></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="licence">
+    <h2 style="margin-top:0">Licence key — unlock your pack</h2>
+    <p class="muted">Licence keys unlock paid tiers. Keys are checked <b>in this browser only</b> and stored on this device — they are never sent anywhere. Your tier unlocks higher caps, more networks, more export formats, the deleted-diff, and more archive sources (Arquivo.pt, Common Crawl, multi-archive evidence packs in Studio).</p>
+    <div class="row">
+      <div><label>Licence key (DP1-…)</label><input id="licence-key" placeholder="DP1-PRO-XXXXXXXXXXXXXXXX-xxxxxxxx" autocomplete="off"></div>
+      <div><label>&nbsp;</label><button class="btn" id="licence-verify" style="width:100%">Verify key</button></div>
+      <div><label>&nbsp;</label><button class="btn2" id="licence-clear" style="width:100%">Remove key</button></div>
+    </div>
+    <p id="licence-status" class="muted"></p>
+    <p class="muted">Signed in? <a href="dashboard.html">Link this key to your account</a> in My account, so your tier follows you across devices.</p>
+    <p class="muted"><b>Demo verification only:</b> keys tried here are checked locally against a public demo secret, so you can try the tier UI end to end. A demo key is <b>not a purchase</b> and proves nothing about payment. Once checkout is connected, real licence keys arrive by email after purchase and are verified server-side.</p>
   </section>
 
   <section id="pricing">
     <h2>Pricing — buy the pack, keep it forever</h2>
-    <p class="muted">Free search on this page, forever (25 captures per search). The packs are one-time purchases — no subscription. Cheaper than the rivals: Social Catfish is $27.48/mo, Spokeo $19.95/mo, Hunchly $169/yr — our Pro launch pack is $19 <b>once</b>. Prices are draft until checkout links are connected (see <code>web/config.js</code>).</p>
+    <p class="muted">Free search on this page, forever (25 captures per search). The packs are one-time purchases — no subscription. Cheaper than the rivals: Social Catfish is $27.48/mo, Spokeo $19.95/mo, Hunchly $169/yr — our Pro launch pack is $19 <b>once</b>. Checkout is live via Stripe (Paddle as the alternative with <code>?checkout=paddle</code>).</p>
     <p class="muted" id="launch-note"></p>
     <div class="pricing" id="plans"></div>
   </section>
@@ -94,162 +262,50 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <h2 style="margin-top:0">Compare packs — every feature, side by side</h2>
     <p class="muted">Studio is a finite pack: 10 evidence-pack reports, 200 batch targets, 25,000 captures per search, 5 seats. Every tier has a stated cap — the caps are the product.</p>
     <div style="overflow-x:auto"><table id="chart"><thead><tr><th>Feature</th><th>Free</th><th>Starter</th><th>Pro</th><th>Studio</th><th>Bundle</th></tr></thead><tbody></tbody></table></div>
-    <p class="muted">Prices and caps come from <code>pricing.yaml</code> (single source of truth) — to change a price, edit that file and run <code>scripts/sync_pricing.py</code>.</p>
+    <p class="muted">Every tier has a stated cap — the caps are the product. Prices are one-time; there is no subscription and no renewal.</p>
   </section>
 
   <section class="card">
-    <h2 style="margin-top:0">Prefer the command line?</h2>
-    <p class="muted"><code>pipx install wayback-social</code> — then <code>wayback-social archive x jack</code>, <code>wayback-social batch watchlist.txt</code>, and exports to CSV / JSON / JSONL / HTML. Same archive, same fields, offline-friendly.</p>
+    <h2 style="margin-top:0">Want more power?</h2>
+    <p class="muted">The same search is also available as a downloadable tool with batch watchlists, deleted-only diff and evidence-pack export. See the project on GitHub.</p>
     <p><a href="https://github.com/ClumsySmurf1337/wayback-social">github.com/ClumsySmurf1337/wayback-social</a> · GPL-3.0 · Based on <a href="https://github.com/claromes/waybacktweets">waybacktweets</a> (Twitter-only)</p>
-    <p class="muted">Honest limits: Wayback archiving is uneven by network, and post URLs that don't contain the username (YouTube watch URLs, Instagram /p/ codes, Pinterest pins) can't be listed per-user — use a single post URL in the CLI with <code>--url</code>. Deleted posts keep their archived snapshot link.</p>
+    <p class="muted">Honest limits: archiving is uneven by network and by archive — some networks are barely saved anywhere, and live sources only know about posts that are still up. Post URLs that don't contain the username (YouTube watch URLs, Instagram /p/ codes, Pinterest pins) can't be listed per-user — paste the post URL in the single-post-URL field above to check that one post instead. Deleted posts keep their archived snapshot link.</p>
   </section>
 </main>
-<footer>wayback-social · Research / OSINT tool. Respect robots, terms of service and people's privacy.</footer>
+<nav class="footernav"><a href="trust.html">Trust &amp; safety</a> · <a href="guides/index.html">Guides</a> · <a href="dashboard.html">My dashboard</a> · <a href="https://github.com/ClumsySmurf1337/wayback-social">GitHub</a></nav>
+<footer>ArchiveCheck · Research / OSINT tool. Respect robots, terms of service and people's privacy.</footer>
 
 <dialog id="dlg"><h3 id="dlgTitle" style="margin-top:0"></h3><p id="dlgBody" class="muted"></p><button class="btn" onclick="document.getElementById('dlg').close()">Close</button></dialog>
+<dialog id="auth-modal"><div id="auth-mount"></div><p><button class="btn2" onclick="document.getElementById('auth-modal').close()">Close</button></p></dialog>
 
 <script src="config.js"></script>
-<script>
-const NETWORKS = {
-  x:{name:"X / Twitter",patterns:["https://twitter.com/{id}/status/*","https://x.com/{id}/status/*"],coverage:"good"},
-  instagram:{name:"Instagram",patterns:["https://www.instagram.com/{id}/p/*","https://www.instagram.com/{id}/reel/*","https://www.instagram.com/{id}/*"],coverage:"moderate"},
-  facebook:{name:"Facebook",patterns:["https://www.facebook.com/{id}/posts/*","https://www.facebook.com/{id}/*"],coverage:"moderate"},
-  tiktok:{name:"TikTok",patterns:["https://www.tiktok.com/@{id}/video/*"],coverage:"moderate"},
-  youtube:{name:"YouTube",patterns:["https://www.youtube.com/@{id}/*","https://www.youtube.com/channel/{id}/*"],coverage:"moderate"},
-  reddit:{name:"Reddit",patterns:["https://www.reddit.com/user/{id}/*"],coverage:"good"},
-  linkedin:{name:"LinkedIn",patterns:["https://www.linkedin.com/in/{id}/*"],coverage:"poor"},
-  threads:{name:"Threads",patterns:["https://www.threads.net/@{id}/post/*","https://www.threads.net/@{id}/*"],coverage:"moderate"},
-  bluesky:{name:"Bluesky",patterns:["https://bsky.app/profile/{id}/post/*"],coverage:"good"},
-  mastodon:{name:"Mastodon",patterns:["https://mastodon.social/@{id}/*"],coverage:"good"},
-  pinterest:{name:"Pinterest",patterns:["https://www.pinterest.com/{id}/*"],coverage:"poor"},
-  tumblr:{name:"Tumblr",patterns:["https://{id}.tumblr.com/post/*"],coverage:"moderate"},
-  twitch:{name:"Twitch",patterns:["https://www.twitch.tv/{id}/*"],coverage:"moderate"},
-  medium:{name:"Medium",patterns:["https://medium.com/@{id}/*"],coverage:"poor"},
-};
-const cfg = window.WAYBACK_SOCIAL_CONFIG;
-const $ = id => document.getElementById(id);
-const sel = $("network");
-for (const [id,n] of Object.entries(NETWORKS)) {
-  const o = document.createElement("option"); o.value=id; o.textContent=`${n.name} — ${n.coverage} archive`; sel.appendChild(o);
-}
-let lastRows = [];
-function showDlg(t,b){ $("dlgTitle").textContent=t; $("dlgBody").textContent=b; $("dlg").showModal(); }
-// Checkout is swappable: ?checkout=paddle|stripe|gumroad|email, or
-// ?ab=paddle-stripe splits visitors 50/50 (stored per session).
-// Lemon Squeezy is closed (16 Nov 2026) — never a provider here.
-function activeProvider(){
-  const q = new URLSearchParams(location.search);
-  const want = q.get("checkout");
-  if (want && cfg.CHECKOUT.links[want]) return want;
-  const ab = q.get("ab");
-  if (ab) {
-    const [a,b] = ab.split("-");
-    if (cfg.CHECKOUT.links[a] && cfg.CHECKOUT.links[b]) {
-      let pick = sessionStorage.getItem("ws-ab");
-      if (!pick) { pick = Math.random() < 0.5 ? a : b; sessionStorage.setItem("ws-ab", pick); }
-      return pick;
-    }
-  }
-  return cfg.CHECKOUT.provider;
-}
-const PROVIDER_LABEL = { paddle:"Paddle", stripe:"Stripe", gumroad:"Gumroad", email:"Email order", lemon:"Lemon Squeezy (closed — do not use)" };
-function renderPlans(){
-  const prov = activeProvider();
-  $("plans").innerHTML = cfg.PRICING.map(p=>`<div class="plan ${p.featured?"featured":""}">
-    ${p.featured?'<span class="badge">RECOMMENDED</span>':""}
-    <h3>${p.name}</h3><div class="price">${p.regular?`<span class="strike">${p.regular}</span>`:""}${p.price} <small>${p.cadence}</small></div>
-    <p class="muted">${p.blurb}</p><ul>${p.features.map(f=>`<li>${f}</li>`).join("")}</ul>
-    <button class="btn" data-plan="${p.id}">${p.cta}</button></div>`).join("");
-  const note = document.createElement("p");
-  note.className = "muted";
-  note.innerHTML = `Checkout: <b>${PROVIDER_LABEL[prov]||prov}</b> · Secure checkout opens in a new tab. Seller test: add <code>?checkout=stripe</code> (or paddle / gumroad / email) or <code>?ab=paddle-stripe</code> to swap providers.`;
-  $("plans").after(note);
-  document.querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>{
-    const p=cfg.PRICING.find(x=>x.id===b.dataset.plan);
-    if(!p.checkout){ showDlg("Free — you're already in","No payment needed. Use the search above, or install the CLI: pipx install wayback-social"); return; }
-    const link = cfg.CHECKOUT.links[prov] && cfg.CHECKOUT.links[prov][p.checkout];
-    if(!link || link.includes("REPLACE")){ showDlg("Checkout not connected yet",`${p.name} (${p.price} ${p.cadence}) via ${PROVIDER_LABEL[prov]||prov} — the checkout link isn't connected yet. The seller replaces the REPLACE_* link in web/config.js, then this button goes straight to secure checkout.`); return; }
-    window.open(link,"_blank");
-  });
-}
-renderPlans();
-function renderChart(){
-  const rows = cfg.FEATURE_CHART || [];
-  const cols = ["free","starter","pro","studio","bundle"];
-  const tb = document.querySelector("#chart tbody");
-  if (tb) tb.innerHTML = rows.map(r=>`<tr><th>${r.label}</th>${
-    cols.map(t=>`<td>${(r.values && r.values[t]) || "—"}</td>`).join("")}</tr>`).join("");
-  const ln = $("launch-note");
-  if (ln && cfg.LAUNCH_NOTE) {
-    const regs = cfg.PRICING.filter(p=>p.regular)
-      .map(p=>`${p.name} ${p.regular}`).join(" · ");
-    ln.innerHTML = `<b>${cfg.LAUNCH_NOTE}</b> Regular prices: ${regs}.`;
-  }
-}
-renderChart();
-function renderRows(rows){
-  lastRows = rows;
-  const tb = document.querySelector("#results tbody"); tb.innerHTML="";
-  rows.forEach(r=>{
-    const tr=document.createElement("tr");
-    const ts=r[1], orig=r[2];
-    tr.innerHTML=`<td>${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)} ${ts.slice(8,10)}:${ts.slice(10,12)}</td>
-    <td><a href="${orig}" target="_blank" rel="noopener">${orig}</a></td>
-    <td><a href="https://web.archive.org/web/${ts}/${orig}" target="_blank" rel="noopener">web.archive.org/web/${ts}/…</a></td>
-    <td>${r[4]||""} · ${r[3]||""}</td>`;
-    tb.appendChild(tr);
-  });
-  $("results").hidden = !rows.length;
-  $("actions").hidden = !rows.length;
-  const dates = rows.map(r=>r[1]).sort();
-  $("stats").innerHTML = rows.length ? `<div><b>${rows.length}</b>captures</div><div><b>${dates[0].slice(0,4)}</b>earliest</div><div><b>${dates[dates.length-1].slice(0,4)}</b>latest</div>` : "";
-}
-async function search(demo){
-  const net = demo?"x":sel.value, id=(demo?"jack":$("handle").value.trim().replace(/^@/,""))||"jack";
-  const limit = Math.min(parseInt($("limit").value)||20, 25); // web = Free tier cap
-  const from=$("from").value.trim(), to=$("to").value.trim();
-  $("go").disabled=true; $("status").textContent="Searching the Wayback Machine — this can take 20–60s…"; $("notice").textContent="";
-  const seen=new Set(); let rows=[];
-  try{
-    for(const pat of NETWORKS[net].patterns){
-      const url = new URL(cfg.CDX_BASE);
-      url.searchParams.set("url", pat.replace("{id}",id));
-      url.searchParams.set("output","json"); url.searchParams.set("limit",String(limit));
-      url.searchParams.set("showResumeKey","true");
-      if(from) url.searchParams.set("from",from); if(to) url.searchParams.set("to",to);
-      const res = await fetch(url.toString());
-      if(!res.ok) continue;
-      const data = await res.json();
-      for(const r of (data||[]).slice(1)){
-        if(r.length<7) continue;
-        const k=r[1]+"|"+r[2]; if(!seen.has(k)){seen.add(k); rows.push(r);}
-      }
-      if(rows.length>=limit) break;
-    }
-    rows.sort((a,b)=>a[1].localeCompare(b[1]));
-    if(!rows.length){ $("status").textContent="No captures found for that handle on this network. Try a wider date range, or check the spelling — some networks are barely archived."; }
-    else $("status").textContent=`Found ${rows.length} capture(s) for @${id} on ${NETWORKS[net].name}.`;
-    renderRows(rows.slice(0,limit));
-  }catch(e){
-    $("status").textContent="Live search failed (archive.org may block browser requests / CORS).";
-    $("notice").textContent="Fallback: use the CLI — wayback-social archive "+net+" "+id+" --limit "+limit+" — it talks to the same CDX API without browser limits. Or try the demo below.";
-    // Demo data so the page still shows what results look like.
-    renderRows([["com,twitter)/jack/status/20","20060321212430","https://twitter.com/jack/status/20","text/html","200","ABC","1"]]);
-  }finally{ $("go").disabled=false; }
-}
-$("go").onclick=()=>search(false);
-$("demo").onclick=()=>search(true);
-function download(name, text, type){
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click();
-}
-$("csv").onclick=()=>{
-  const head="network,identifier,archived_timestamp,original_post_url,archived_post_url,archived_statuscode,archived_mimetype\n";
-  const body=lastRows.map(r=>[sel.value,$("handle").value,r[1],r[2],`https://web.archive.org/web/${r[1]}/${r[2]}`,r[4],r[3]].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  download("wayback-social.csv", head+body, "text/csv");
-};
-$("json").onclick=()=>{
-  download("wayback-social.json", JSON.stringify(lastRows.map(r=>({network:sel.value,identifier:$("handle").value,archived_timestamp:r[1],original_post_url:r[2],archived_post_url:`https://web.archive.org/web/${r[1]}/${r[2]}`,archived_statuscode:r[4],archived_mimetype:r[3]})),null,2), "application/json");
-};
-</script>
+<script src="runtime-config.js"></script>
+<script src="analytics.js"></script>
+<script src="licence.js"></script>
+<script src="vendor/flatpickr/flatpickr.min.js"></script>
+<script src="search-job.js"></script>
+<script src="turnstile.js"></script>
+<script src="auth.js"></script>
+<script src="auth-ui.js"></script>
+<script src="url-alias.js"></script>
+<script src="url-mode.js"></script>
+<script src="console-fetch.js"></script>
+<script src="console.js"></script>
+<script src="render-rows.js"></script>
+<script src="pricing-ui.js"></script>
+<script src="datepickers.js"></script>
+<script src="presets-ui.js"></script>
+<script src="modes.js"></script>
+<script src="arquivo-parse.js"></script>
+<script src="arquivo.js"></script>
+<script src="ghostarchive.js"></script>
+<script src="commoncrawl.js"></script>
+<script src="live-check.js"></script>
+<script src="evidence-usage.js"></script>
+<script src="batch.js"></script>
+<script src="diff.js"></script>
+<script src="citations.js"></script>
+<script src="zip-store.js"></script>
+<script src="evidence-pack.js"></script>
 </body>
 </html>

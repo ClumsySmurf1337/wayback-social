@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static guide page. Like trust.html, this page is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. Canonical host follows
+  the site-wide convention (deletedproof.northforgelabs.dev); see
+  docs/canonical-decision.md — the retarget, if John picks it, must
+  cover these pages too. -->
+<title>How to find deleted Instagram posts — ArchiveCheck</title>
+<meta name="description" content="Deleted Instagram posts are hard to list per user — post URLs don't contain the handle. Here's what the archive holds, and the check that works.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/guides/find-deleted-instagram-posts/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="How to find deleted Instagram posts — ArchiveCheck">
+<meta property="og:description" content="Deleted Instagram posts are hard to list per user — post URLs don't contain the handle. Here's what the archive holds, and the check that works.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/guides/find-deleted-instagram-posts/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="How to find deleted Instagram posts — ArchiveCheck">
+<meta name="twitter:description" content="Deleted Instagram posts are hard to list per user — post URLs don't contain the handle. Here's what the archive holds, and the check that works.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"How to find deleted Instagram posts","description":"Deleted Instagram posts are hard to list per user — post URLs don't contain the handle. Here's what the archive holds, and the check that works.","author":{"@type":"Organization","name":"ArchiveCheck"},"publisher":{"@type":"Organization","name":"ArchiveCheck"},"datePublished":"2026-11-27","dateModified":"2026-11-27","mainEntityOfPage":"https://deletedproof.northforgelabs.dev/guides/find-deleted-instagram-posts/"}
+</script>
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}.card h3{margin:18px 0 6px}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+.warnbox{border-left:4px solid var(--warn);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.warnbox p{margin:6px 0}
+ul,ol{line-height:1.8;color:var(--text)}
+ul li::marker,ol li::marker{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+code{background:#0f1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>How to find <span>deleted Instagram posts</span></h1>
+  <p class="sub">Instagram is the hardest network in this tool to list per user. Here's what the archive actually holds — and the single-post check that works instead.</p>
+  <p><a href="../../index.html">← Back to search</a> · <a href="../../dashboard.html">My dashboard</a> · <a href="index.html">All guides</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>The short version</h2>
+    <p>Instagram post URLs look like <code>instagram.com/p/ABC123/</code> — the code, not the handle. Because the handle isn't in the URL, the archive can't list "all posts by @nasa" the way it can for X. A per-user Instagram search returns mostly <b>profile-page captures</b> (the profile as it looked on a date), not a list of individual posts. That is a property of Instagram's URLs, not a bug in the search — and any tool that promises a full per-user Instagram post list from the archive is overselling.</p>
+  </section>
+
+  <section class="card">
+    <h2>What to do instead</h2>
+    <ol>
+      <li><b>Search the handle anyway.</b> On the <a href="../../index.html">search console</a>, pick Instagram, type the handle, set a date range. You will get profile captures with dates — useful for "what did this profile look like, and when did it change", and for old bios.</li>
+      <li><b>Check one post at a time.</b> If you know the post's URL (<code>instagram.com/p/&lt;code&gt;/</code>), paste it into the <b>single post URL</b> field on the <a href="../../index.html">search console</a> — the console checks that one post across the archives and labels each capture with its source. (You can still open the URL on the Wayback Machine directly if you prefer: paste it into the search box at web.archive.org.) This is the reliable check for a specific deleted post — the console's per-user search is the wrong tool for it, because it searches by handle, not by single post URL.</li>
+      <li><b>Try the other archives.</b> Ghostarchive saves Instagram posts other archives miss, including playable video, and archive.today renders JavaScript in a real browser, so its captures often read where Wayback replays are blank shells. Both are outbound links from a result — check them one URL at a time, and never treat an archive.today capture as legal evidence (it is blacklisted by Wikipedia and 429s aggressively).</li>
+      <li><b>Run the deleted diff on what you find.</b> Deleted diff (Starter and up) checks each archived post live. For Instagram there is no free no-login live check — the network is login-walled — so verdicts for Instagram posts are usually <b>unknown</b>, which is never counted as deleted.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>What CDX can and can't do for Instagram</h2>
+    <ul>
+      <li><b>Can:</b> profile-page captures with dates; single-post captures when you know the exact <code>/p/&lt;code&gt;/</code> URL; old bios and profile changes over time.</li>
+      <li><b>Can't:</b> enumerate "every post this handle published" — the URLs don't carry the handle, so there is nothing to enumerate by. Reels and stories are barely archived at all; stories almost never.</li>
+      <li><b>Patchy:</b> many Instagram captures replay as blank shells — the post text may still be in the page source. Private accounts are never captured.</li>
+      <li><b>Live checks:</b> none free. Instagram, Facebook, Threads and LinkedIn are all login-walled for live reads. The tool labels Instagram live checks as archive-only rather than pretending.</li>
+    </ul>
+    <div class="warnbox">
+      <p><b>Coverage label: moderate.</b> The console labels every network honestly — X, Reddit, Bluesky and Mastodon are good; Instagram, Facebook, TikTok, YouTube, Threads, Tumblr and Twitch are moderate; LinkedIn, Pinterest and Medium are poor. A thin result for Instagram is the archive telling the truth, not the search failing.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Honest limits</h2>
+    <div class="limits">
+      <p><b>Public archived posts only. Found ≠ guilty. Not found ≠ not real.</b></p>
+      <p>A missing Instagram post was most likely never captured — not necessarily never posted, and not proof of anything about the person. Do not use results to harass, stalk, or confront anyone, and never look up anyone under 18. <a href="../../trust.html">Trust &amp; safety</a></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Related guides</h2>
+    <ul>
+      <li><a href="../find-deleted-tweets/index.html">How to find deleted tweets</a> — the network where per-user search works best.</li>
+      <li><a href="../catfish-check-5-minutes/index.html">Catfish check in 5 minutes</a> — what to do when the archive is thin: reverse-image checks.</li>
+      <li><a href="../what-the-archive-cant-tell-you/index.html">What the archive can't tell you</a> — the limits page, in full.</li>
+    </ul>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.<br>Last updated 27 November 2026.</footer>
+<script src="../../config.js"></script>
+<script src="../../analytics.js"></script>
+</body>
+</html>

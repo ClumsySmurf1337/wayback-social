@@ -9,8 +9,60 @@
 # placeholders until Paddle is connected).
 name = "deletedproof"
 compatibility_date = "2026-11-26"
+# node:crypto in functions/ (Ed25519 mint/verify) needs Node compat.
+compatibility_flags = ["nodejs_compat"]
 
 [pages]
 pages_build_output_dir = "web/"
 # No build command: web/ is plain HTML/JS/CSS. If a build step is ever
 # added (e.g. bundling), set pages_build_command here.
+
+# D1 licence store (created 2026-11-26, uuid below). Used by
+# functions/api/paddle-webhook.js (mint + store) and
+# functions/api/licence-check.js (revocation lookup).
+# Schema: migrations/0001_licences.sql (already applied).
+# Clerk link table: migrations/0002_users.sql (NOT yet applied —
+# apply it before link-licence.js can store links; until then the
+# endpoint answers 503 "D1 not configured" only if the binding is
+# missing — with the binding live and the table missing it 500s,
+# so apply 0002 first).
+[[d1_databases]]
+binding = "DB"
+database_name = "wayback-social-licences"
+database_id = "38a206cb-5256-4ff0-b8b7-d5a06c2d4d22"
+
+# R2 evidence-pack buckets (issue #5) — CREATED LIVE 2026-11-27 01:09 UTC
+# (deletedproof-packs + deletedproof-packs-staging, Standard class,
+# WNAM). The upload Function (functions/api/packs-upload.js) uses
+# S3-compatible presigned PUTs, so it does NOT need this binding; the
+# binding is for the future pack-confirm endpoint (object-existence
+# check) and the nightly retention job.
+[[r2_buckets]]
+binding = "PACKS"
+bucket_name = "deletedproof-packs"
+# (staging uses deletedproof-packs-staging on preview deploys.)
+# R2 S3 API credentials for presigning are Pages secrets, not here:
+#   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, PACKS_BUCKET
+# See docs/storage-auth-plan.md §1 for the token + secrets steps and
+# the lifecycle rules (packs/free/* → 30 days, packs/paid/* → 365 days).
+
+# Secrets (set with `npx wrangler pages secret put NAME`, never here):
+#   CLERK_PUBLISHABLE_KEY    — PUBLIC key served by /api/config
+#     (pk_test_… on Preview, pk_live_… on Production once the prod
+#     Clerk instance exists). Public by design — a plain env var
+#     works too; see docs/clerk-env-swap.md §10 for the swap.
+#   TURNSTILE_SITE_KEY        — PUBLIC site key, same pattern
+#     (served by /api/config; per environment).
+#   LICENCE_ED25519_PRIVATE_KEY — PKCS#8 PEM (scripts/gen_licence_keys.mjs)
+#   LICENCE_ED25519_PUBLIC_KEY  — SPKI DER base64 (same keypair; also
+#                                 baked into licence2.py / licence.js)
+#   PADDLE_WEBHOOK_SECRET       — pdl_ntfset_... (notification destination)
+#   PADDLE_WEBHOOK_SECRET_SANDBOX — sandbox destination secret (optional)
+#   PADDLE_API_KEY              — to fetch buyer email by customer_id
+#   PADDLE_PRICE_IDS            — JSON {"pri_...": "starter", ...}
+#   RESEND_API_KEY, RESEND_FROM — licence email delivery
+#   APP_URL                     — e.g. https://app.archivecheck.com
+#   CLERK_SECRET_KEY            — Clerk Backend API (link-licence.js)
+#   LICENCE_SECRET              — production DP1 minting secret
+#                                 (link-licence.js; NOT the public demo secret)
+#   TURNSTILE_SECRET_KEY        — Turnstile siteverify (functions/api/cdx.js)

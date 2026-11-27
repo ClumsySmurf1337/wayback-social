@@ -9,7 +9,7 @@ from .parse import FIELD_OPTIONS, PostsParser
 from .export import export_all
 from .presets import get_preset, list_presets
 
-__version__ = "1.3.0"
+__version__ = "1.5.0"
 __all__ = ["query_cdx", "query_many", "get_network", "list_networks",
            "FIELD_OPTIONS", "PostsParser", "export_all",
            "get_preset", "list_presets"]

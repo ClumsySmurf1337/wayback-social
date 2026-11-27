@@ -67,7 +67,7 @@ def test_batch_skips_bad_lines_and_writes_summary(monkeypatch, tmp_path):
              "https://twitter.com/jack/status/20", "text/html", "200", "ABC", "1"]]
     monkeypatch.setattr(cdx_mod, "query_many", lambda patterns, **k: (rows, None))
     # cli imports query_many into its own namespace
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.batch as cli_mod
     monkeypatch.setattr(cli_mod, "query_many", lambda patterns, **k: (rows, None))
     targets = tmp_path / "targets.txt"
     targets.write_text("# watchlist\nx jack\nbogus nope\ninstagram\n\n")

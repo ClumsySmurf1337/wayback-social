@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static guide page. Like trust.html, this page is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. Canonical host follows
+  the site-wide convention (deletedproof.northforgelabs.dev); see
+  docs/canonical-decision.md — the retarget, if John picks it, must
+  cover these pages too. -->
+<title>Catfish check in 5 minutes — ArchiveCheck</title>
+<meta name="description" content="Before you meet someone or send money, check what the archive holds on their handle: old posts, old bios, deleted posts — and what it can't prove.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/guides/catfish-check-5-minutes/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="Catfish check in 5 minutes — ArchiveCheck">
+<meta property="og:description" content="Before you meet someone or send money, check what the archive holds on their handle: old posts, old bios, deleted posts — and what it can't prove.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/guides/catfish-check-5-minutes/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Catfish check in 5 minutes — ArchiveCheck">
+<meta name="twitter:description" content="Before you meet someone or send money, check what the archive holds on their handle: old posts, old bios, deleted posts — and what it can't prove.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Catfish check in 5 minutes","description":"Before you meet someone or send money, check what the archive holds on their handle: old posts, old bios, deleted posts — and what it can't prove.","author":{"@type":"Organization","name":"ArchiveCheck"},"publisher":{"@type":"Organization","name":"ArchiveCheck"},"datePublished":"2026-11-27","dateModified":"2026-11-27","mainEntityOfPage":"https://deletedproof.northforgelabs.dev/guides/catfish-check-5-minutes/"}
+</script>
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}.card h3{margin:18px 0 6px}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+.warnbox{border-left:4px solid var(--warn);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.warnbox p{margin:6px 0}
+ul,ol{line-height:1.8;color:var(--text)}
+ul li::marker,ol li::marker{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+code{background:#0f1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Catfish check <span>in 5 minutes</span></h1>
+  <p class="sub">Before you meet someone or send money, check what the archive holds on the handle they gave you. One handle, five minutes, no account — and a clear line on what the result can't prove.</p>
+  <p><a href="../../index.html">← Back to search</a> · <a href="../../dashboard.html">My dashboard</a> · <a href="index.html">All guides</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>What this check is — and isn't</h2>
+    <p>This is a <b>pre-meeting safety check</b>: you were given a handle, and you want to know whether the person behind it has a real, dated history — or whether the profile appeared yesterday with no past. It is not surveillance, not monitoring, and not a verdict. The tool gives you dated captures; you decide what they mean. There is no trust score and no "catfish probability" — a tool that declares someone a scammer from an archive hit is a defamation risk, and this one refuses to do it.</p>
+  </section>
+
+  <section class="card">
+    <h2>The 5-minute check</h2>
+    <ol>
+      <li><b>Minute 0–1 — broad search.</b> On the <a href="../../index.html">search console</a>, type the handle, tick <b>All networks</b>, and search. Free tier checks 3 networks; Pro and Studio check all 14. A real person usually has captures on more than one network, spread over years. A handle with zero captures anywhere is not proof of a fake — it may simply never have been archived — but it is a reason to slow down.</li>
+      <li><b>Minute 1–2 — read the dates.</b> Look at the earliest capture on each network. A profile claiming five years of history whose first capture is last month is a mismatch worth noticing. Open a few snapshots: do the old bio, photos and posts read like the same person?</li>
+      <li><b>Minute 2–3 — deleted diff.</b> In Research tools, run <b>Deleted diff</b> on the handle's main network (Starter and up). Deleted posts are normal — everyone deletes things — but a profile that wiped its entire history the week it started talking to you is a pattern, not a coincidence.</li>
+      <li><b>Minute 3–4 — the photo.</b> The archive holds text and links, not face matching. Reverse-image-check the profile photo separately: <b>Google Lens</b> and <b>TinEye</b> are free and find the same image elsewhere on the web. If the same photo appears under three different names, stop there. Do not use face-recognition search — it is biometric surveillance, and this tool deliberately does not offer it.</li>
+      <li><b>Minute 4–5 — decide on evidence, not vibes.</b> If the archive shows a consistent, dated history across networks, that is reassuring — not proof, but reassuring. If it shows nothing, a brand-new profile, or contradictions, don't send money and don't meet alone. Meet in public, tell someone, and keep the conversation on the platform until you have.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>What the archive can't tell you</h2>
+    <ul>
+      <li><b>Phone, email, address, dating-app membership.</b> The archive holds public posts, not people-search records. Anyone selling you a "full background report" from an archive search is inventing it.</li>
+      <li><b>Whether two handles are the same person.</b> The same handle on two networks proves a handle existed twice — not that one person owns both. False positives are routine.</li>
+      <li><b>Intent.</b> A deleted post proves a post existed and was removed. It does not prove why.</li>
+      <li><b>Instagram and Facebook depth.</b> Both are login-walled and thin in the archive — a clean result there means "not captured", not "clean person". See <a href="../find-deleted-instagram-posts/index.html">the Instagram guide</a>.</li>
+    </ul>
+    <div class="warnbox">
+      <p><b>If you feel unsafe, act on that first.</b> If someone is pressuring you for money, gifts, or personal details, or the conversation feels wrong, stop — and contact a local support helpline or a romance-scam prevention resource before anything else. An archive search is a tool, not a safety plan.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Why not just pay for a people search?</h2>
+    <p>Social Catfish charges $5.73 for a 3-day trial, then $27.48 a month, for a people-search report built from live records. It has a dating-site index and a large reverse-image database that this tool does not — but it has no archived-post timeline and no deleted-post history, and the subscription auto-renews. This check is free, one-off, and shows you the one thing they can't: what the handle posted and deleted, with dates. For the full comparison, see <a href="../archivecheck-vs-social-catfish/index.html">ArchiveCheck vs Social Catfish</a>.</p>
+  </section>
+
+  <section class="card">
+    <h2>Honest limits</h2>
+    <div class="limits">
+      <p><b>Public archived posts only. Found ≠ guilty. Not found ≠ not real.</b></p>
+      <p>Check a profile you were given, before you meet or send money. Never monitor a partner, never stalk an ex, never look up anyone under 18, and never use results to harass or confront someone. <a href="../../trust.html">Trust &amp; safety</a></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Related guides</h2>
+    <ul>
+      <li><a href="../find-deleted-tweets/index.html">How to find deleted tweets</a> — the network where the check works best.</li>
+      <li><a href="../find-deleted-instagram-posts/index.html">How to find deleted Instagram posts</a> — where the check is thin, and why.</li>
+      <li><a href="../what-the-archive-cant-tell-you/index.html">What the archive can't tell you</a> — the limits page, in full.</li>
+    </ul>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.<br>Last updated 27 November 2026.</footer>
+<script src="../../config.js"></script>
+<script src="../../analytics.js"></script>
+</body>
+</html>

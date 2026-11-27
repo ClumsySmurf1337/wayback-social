@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static guide page. Like trust.html, this page is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. Canonical host follows
+  the site-wide convention (deletedproof.northforgelabs.dev); see
+  docs/canonical-decision.md — the retarget, if John picks it, must
+  cover these pages too. -->
+<title>Journalist: tracking a deleted claim — ArchiveCheck</title>
+<meta name="description" content="How a reporter traces a deleted claim through the archive: broad search, deleted diff, citations, verification — and getting comment before publishing.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/guides/journalist-deleted-claim/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="Journalist: tracking a deleted claim — ArchiveCheck">
+<meta property="og:description" content="How a reporter traces a deleted claim through the archive: broad search, deleted diff, citations, verification — and getting comment before publishing.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/guides/journalist-deleted-claim/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Journalist: tracking a deleted claim — ArchiveCheck">
+<meta name="twitter:description" content="How a reporter traces a deleted claim through the archive: broad search, deleted diff, citations, verification — and getting comment before publishing.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Journalist: tracking a deleted claim","description":"How a reporter traces a deleted claim through the archive: broad search, deleted diff, citations, verification — and getting comment before publishing.","author":{"@type":"Organization","name":"ArchiveCheck"},"publisher":{"@type":"Organization","name":"ArchiveCheck"},"datePublished":"2026-11-27","dateModified":"2026-11-27","mainEntityOfPage":"https://deletedproof.northforgelabs.dev/guides/journalist-deleted-claim/"}
+</script>
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}.card h3{margin:18px 0 6px}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+.warnbox{border-left:4px solid var(--warn);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.warnbox p{margin:6px 0}
+ul,ol{line-height:1.8;color:var(--text)}
+ul li::marker,ol li::marker{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+code{background:#0f1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Journalist: tracking <span>a deleted claim</span></h1>
+  <p class="sub">A reporter hears that a public figure deleted a claim. The workflow: broad search, deleted diff, citations, verification — and getting comment before anything is published.</p>
+  <p><a href="../../index.html">← Back to search</a> · <a href="../../dashboard.html">My dashboard</a> · <a href="index.html">All guides</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>Illustrative example — not a real person</h2>
+    <p><b>Every name, handle, and post in this case study is invented to show the workflow. No real person is depicted, and no real post is quoted.</b> The scenario: a fictional city councillor, "Councillor Dana Reyes" (@danareyes_city, fictional), is said to have promised a new riverside park in 2021, then deleted the post after the project was cancelled. A reporter wants to know whether the post existed, what it said, and when it vanished.</p>
+  </section>
+
+  <section class="card">
+    <h2>The workflow</h2>
+    <ol>
+      <li><b>Broad search first.</b> On the <a href="../../index.html">console</a>, type the handle and tick <b>All networks</b> with a date range covering 2021. A public figure usually has captures on more than one network; the spread itself is evidence of a real history. Pro covers all 14 networks and 2,500 captures per search — a newsroom job, not a single-post lookup.</li>
+      <li><b>Narrow to the claim.</b> The broad search returns every capture. Use the date range to narrow to the months around the promise, then read the capture rows. The post URL and its capture timestamps are the spine of the story — every claim you publish must carry a date.</li>
+      <li><b>Run the deleted diff.</b> Research tools → Deleted diff checks each archived post live. The 2021 post answers 404 on the live site: <b>deleted</b>. Neighbouring posts from the same month answer 200: <b>live</b>. The contrast is what makes the deletion visible — a single 404 proves nothing on its own.</li>
+      <li><b>Build citations.</b> Research tools → Citations turns the results into a list with the archived URL, Wayback timestamp, snapshot link, live verdict, and retrieval date. That is the citation format your editor and your readers can check.</li>
+      <li><b>Verify the snapshot yourself.</b> Open every replay link at web.archive.org. A capture that replays as a blank shell proves the URL was captured on that date, not the content — if the text doesn't replay, say so in your notes and look for the text via oEmbed or a second archive (Arquivo.pt, Ghostarchive) before you quote it.</li>
+      <li><b>Get comment before publishing.</b> The archive proves a post existed and was removed. It does not prove why. Ask the councillor — or their office — for comment, and report the answer alongside the capture. Publishing a screenshot of a replay as if it were a live post, without comment, is how an archive search becomes a rumour.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>What the newsroom version costs</h2>
+    <p>Pro is $19 once at launch ($29 regular): all 14 networks, batch of 50 targets, keyword search over fetched text. Studio is $49 once at launch ($99 regular): batch of 200, 25,000 captures per search, 10 evidence-pack reports, 5 seats, commercial use. Compare with the tools that do the defensible-capture half of the job — Hunchly is $169 a year and cannot retrieve anything already deleted; Page Vault is $199–$349 per capture. This tool is the time-saving lead-finder: a $19 multi-network batch and deleted diff is a time saving, not a new capability — the free tools (Wayback, archive.today, Bellingcat's toolkit) do the same job manually, one network at a time. Competitor prices were checked September–November 2026 — re-check before you rely on them.</p>
+  </section>
+
+  <section class="card">
+    <h2>What not to do</h2>
+    <ul>
+      <li><b>Don't publish a replay screenshot as a live post.</b> Label every archived image with its capture date.</li>
+      <li><b>Don't treat a single capture as a story.</b> One capture can be a misdated mirror, a different account with the same handle, or a placeholder. Corroborate: multiple captures, multiple networks, a second archive.</li>
+      <li><b>Don't skip the "unknown" verdicts.</b> A post marked unknown was login-walled or errored — it is not deleted, and reporting it as deleted is an error your correction will have to fix.</li>
+      <li><b>Don't use the tool on private individuals the same way.</b> This workflow is for public figures and public claims. Checking a private person's deleted posts for a story needs a public-interest reason and an editor's sign-off — see <a href="../../trust.html">Trust &amp; safety</a>.</li>
+    </ul>
+    <div class="warnbox">
+      <p><b>Triage, not court-ready.</b> If the claim ends up in a filing rather than a story, the evidence pack (Studio) preserves a dated, citable record with a SHA-256 manifest — but it carries no vendor affidavit and no chain-of-custody statement. See <a href="../evidence-pack-for-lawyers/index.html">Evidence pack for lawyers</a>.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Honest limits</h2>
+    <div class="limits">
+      <p><b>Public archived posts only. Found ≠ guilty. Not found ≠ not real.</b></p>
+      <p>A citation proves a post existed on the archived date — not who wrote it, why it was deleted, or intent. Verify each snapshot yourself at web.archive.org before relying on it. <a href="../../trust.html">Trust &amp; safety</a></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Related guides</h2>
+    <ul>
+      <li><a href="../evidence-pack-for-lawyers/index.html">Evidence pack for lawyers</a> — the same workflow, for a filing.</li>
+      <li><a href="../find-deleted-tweets/index.html">How to find deleted tweets</a> — the search itself, step by step.</li>
+      <li><a href="../what-the-archive-cant-tell-you/index.html">What the archive can't tell you</a> — the limits page, in full.</li>
+    </ul>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.<br>Last updated 27 November 2026.</footer>
+<script src="../../config.js"></script>
+<script src="../../analytics.js"></script>
+</body>
+</html>

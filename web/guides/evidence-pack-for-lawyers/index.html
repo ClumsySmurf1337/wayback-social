@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static guide page. Like trust.html, this page is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. Canonical host follows
+  the site-wide convention (deletedproof.northforgelabs.dev); see
+  docs/canonical-decision.md — the retarget, if John picks it, must
+  cover these pages too. -->
+<title>Evidence pack for lawyers — ArchiveCheck</title>
+<meta name="description" content="Turn archived posts into a citable, dated record: deleted diff, replay links, timestamps and a SHA-256 manifest. Triage, not court-ready evidence.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/guides/evidence-pack-for-lawyers/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="Evidence pack for lawyers — ArchiveCheck">
+<meta property="og:description" content="Turn archived posts into a citable, dated record: deleted diff, replay links, timestamps and a SHA-256 manifest. Triage, not court-ready evidence.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/guides/evidence-pack-for-lawyers/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Evidence pack for lawyers — ArchiveCheck">
+<meta name="twitter:description" content="Turn archived posts into a citable, dated record: deleted diff, replay links, timestamps and a SHA-256 manifest. Triage, not court-ready evidence.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Evidence pack for lawyers","description":"Turn archived posts into a citable, dated record: deleted diff, replay links, timestamps and a SHA-256 manifest. Triage, not court-ready evidence.","author":{"@type":"Organization","name":"ArchiveCheck"},"publisher":{"@type":"Organization","name":"ArchiveCheck"},"datePublished":"2026-11-27","dateModified":"2026-11-27","mainEntityOfPage":"https://deletedproof.northforgelabs.dev/guides/evidence-pack-for-lawyers/"}
+</script>
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}.card h3{margin:18px 0 6px}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+.warnbox{border-left:4px solid var(--warn);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.warnbox p{margin:6px 0}
+ul,ol{line-height:1.8;color:var(--text)}
+ul li::marker,ol li::marker{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+code{background:#0f1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Evidence pack <span>for lawyers</span></h1>
+  <p class="sub">Turn archived posts into a dated, citable record: deleted diff, replay links, timestamps, and a SHA-256 manifest. Built for triage — not as court-ready evidence on its own.</p>
+  <p><a href="../../index.html">← Back to search</a> · <a href="../../dashboard.html">My dashboard</a> · <a href="index.html">All guides</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>What an evidence pack is</h2>
+    <p>A Studio evidence pack is a ZIP built from the results on screen: <code>report.html</code> (a readable report), <code>captures.csv</code> / <code>.json</code> / <code>.jsonl</code> (every capture with its timestamp and snapshot link), <code>manifest.json</code> and <code>manifest.sha256</code> (a hash of every file, so any later change is detectable), and a <code>README.txt</code>. Studio includes 10 evidence-pack reports; each one you build is logged on the dashboard (used X / 10), and the 11th is blocked with a top-up prompt. Packs you save are stored for 12 months (free: 30 days), with a 30-day grace period after a refund, and deleted immediately on request.</p>
+    <div class="warnbox">
+      <p><b>Triage, not court-ready.</b> This pack is a preservation lead: it locates the capture and preserves a dated, citable record of it. It carries no qualified timestamp, no vendor affidavit, and no chain-of-custody statement. Before relying on anything in a filing, verify every snapshot yourself at web.archive.org and have counsel confirm what your jurisdiction requires. Dedicated capture tools (Page Vault, from $199 per capture; Hunchly, $169/yr) exist precisely for the defensible-capture half of the job.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Building a pack, step by step</h2>
+    <ol>
+      <li><b>Search the handle</b> on the <a href="../../index.html">console</a> — one network at a time, with a date range covering the matter. Pro covers all 14 networks and 2,500 captures per search; Studio raises that to 25,000 and 200 batch targets.</li>
+      <li><b>Run the deleted diff</b> (Research tools → Deleted diff). Each post is checked live and marked live, deleted, or unknown. Unknown means the live site was login-walled or errored — it is never counted as deleted, and the pack says so.</li>
+      <li><b>Build citations first.</b> Research tools → Citations turns the results into a list with the archived URL, Wayback timestamp, snapshot link, live verdict, and retrieval date — the citation format, in copy-pasteable text or .md/.csv.</li>
+      <li><b>Build the evidence pack</b> (Studio). The pack is built from the rows on screen, so run the search and the diff before you click it. Post text is not fetched into the pack in the browser — the pack preserves the capture record and the links, and the report says so.</li>
+      <li><b>Verify the snapshots.</b> Open each replay link yourself. A capture that replays as a blank shell still proves the URL was captured on that date, but it does not prove the content — say which is which in your notes.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>What the pack proves — and what it doesn't</h2>
+    <ul>
+      <li><b>Proves:</b> a public post at a URL was captured by the archive on a date, and the capture's digest matches the manifest. Every claim in the pack is dated and linked.</li>
+      <li><b>Does not prove:</b> who wrote the post (same handle ≠ same person), why it was deleted, or what anyone intended. CDX lists captures, not authorship.</li>
+      <li><b>Does not cover:</b> private accounts, DMs, or anything behind a login — the archive never captured them, and this tool never asks for access. Stories are almost never archived.</li>
+      <li><b>Never use for:</b> employment, tenant, credit or insurance decisions. This is not a consumer report under the FCRA, and archive results must never be used as one. See <a href="../../trust.html">Trust &amp; safety</a>.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Costs, honestly</h2>
+    <p>Studio is $49 launch ($99 regular), one-time — 10 evidence-pack reports included, 5 seats, commercial use. Compare: Page Vault charges $199–$349 <i>per capture</i> for a done-for-you capture with a vendor affidavit; Pagefreezer starts at $1,500 a year for continuous compliant archiving of your own accounts. This tool is the cheap lead-finder that sits before those tools, not a replacement for them. Prices for competitors were checked September–November 2026 — re-check before you rely on them.</p>
+  </section>
+
+  <section class="card">
+    <h2>Honest limits</h2>
+    <div class="limits">
+      <p><b>Public archived posts only. Found ≠ guilty. Not found ≠ not real.</b></p>
+      <p>A citation proves a post existed on the archived date — not who wrote it, why it was deleted, or intent. Verify each snapshot yourself at web.archive.org before relying on it in a filing. <a href="../../trust.html">Trust &amp; safety</a></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Related guides</h2>
+    <ul>
+      <li><a href="../journalist-deleted-claim/index.html">Journalist: tracking a deleted claim</a> — the same workflow, for a newsroom.</li>
+      <li><a href="../find-deleted-tweets/index.html">How to find deleted tweets</a> — the search itself, step by step.</li>
+      <li><a href="../what-the-archive-cant-tell-you/index.html">What the archive can't tell you</a> — the limits page, in full.</li>
+    </ul>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.<br>Last updated 27 November 2026.</footer>
+<script src="../../config.js"></script>
+<script src="../../analytics.js"></script>
+</body>
+</html>
