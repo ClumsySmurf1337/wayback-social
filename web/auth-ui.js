@@ -121,21 +121,37 @@
     }
   }
 
+  /* Sign-in must never fail silently. On 2026-11-27 the preview
+   * rendered a Sign in button whose click did nothing — no form,
+   * no error anywhere on the page — because openSignIn() threw
+   * inside Clerk (UI components not ready) and the throw escaped
+   * the click handler, and the mount fallback swallowed its own
+   * errors with `return false`. Every failure path below writes
+   * its reason into #auth-area (homepage) or #account-status
+   * (dashboard), so the user — and any live check — can see it. */
+  function authError(msg) {
+    if (typeof document === "undefined") return;
+    var area = document.getElementById("auth-area") || document.getElementById("account-status");
+    if (area) area.textContent = "Sign-in couldn't open (" + msg + ") — licence keys still work.";
+  }
   function openAuthModal(which) {
     if (typeof document === "undefined") return false;
     var clerk = A._getClerk();
-    if (!clerk) return false;
-    if (which === "signup" && typeof clerk.openSignUp === "function") { clerk.openSignUp(); return true; }
-    if (which === "signin" && typeof clerk.openSignIn === "function") { clerk.openSignIn(); return true; }
+    if (!clerk) { authError("sign-in service not loaded"); return false; }
+    var opener = which === "signup" ? clerk.openSignUp : clerk.openSignIn;
+    if (typeof opener === "function") {
+      try { opener.call(clerk); return true; }
+      catch (e) { authError(e && e.message ? e.message : "sign-in failed"); return false; }
+    }
     var dlg = document.getElementById("auth-modal");
     var mount = document.getElementById("auth-mount");
-    if (!dlg || !mount) return false;
+    if (!dlg || !mount) { authError("sign-in panel missing on this page"); return false; }
     mount.innerHTML = "";
     try {
       if (which === "signup" && clerk.mountSignUp) clerk.mountSignUp(mount);
       else if (clerk.mountSignIn) clerk.mountSignIn(mount);
-      else return false;
-    } catch (e) { return false; }
+      else { authError("Clerk UI components not loaded"); return false; }
+    } catch (e) { authError(e && e.message ? e.message : "sign-in failed"); return false; }
     if (typeof dlg.showModal === "function") dlg.showModal();
     return true;
   }
