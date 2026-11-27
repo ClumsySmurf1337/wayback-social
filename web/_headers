@@ -3,7 +3,8 @@
 # - cdn.jsdelivr.net: Clerk SDK (web/auth-ui.js loads clerk-js from jsDelivr)
 # - challenges.cloudflare.com: Turnstile widget script + iframe + API (web/turnstile.js)
 # - *.clerk.accounts.dev: Clerk Frontend API (dev instance beloved-gazelle-4678
-#   + the future production instance, which will have a different subdomain)
+#   + the future production instance, which will have a different subdomain);
+#   also in script-src — clerk.load() may fetch UI code from the same host.
 # - static.cloudflareinsights.com + cloudflareinsights.com: Web Analytics
 #   beacon (web/analytics.js, token-gated — not live until a token is set)
 # 2026-11-27: script-src was 'self' only, which blocked the Clerk SDK and
@@ -14,7 +15,7 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://web.archive.org https://archive.org https://*.clerk.accounts.dev https://challenges.cloudflare.com https://cloudflareinsights.com; img-src 'self' data:; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://static.cloudflareinsights.com https://*.clerk.accounts.dev; style-src 'self' 'unsafe-inline'; connect-src 'self' https://web.archive.org https://archive.org https://*.clerk.accounts.dev https://challenges.cloudflare.com https://cloudflareinsights.com; img-src 'self' data:; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'
   Cache-Control: public, max-age=3600
 
 /config.js

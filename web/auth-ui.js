@@ -60,7 +60,15 @@
     if (su) su.addEventListener("click", function () { openSignUp(); });
   }
 
-  function loadSdk() {
+  /* Clerk v6 script-tag integration (clerk.com/docs JavaScript quickstart,
+   * <script> tab): the bundle reads its publishable key from the
+   * data-clerk-publishable-key attribute and sets window.Clerk to the
+   * (already constructed) instance — it is NOT a constructor. The
+   * `new Clerk(key)` form is only for the NPM/bundler path
+   * (import Clerk from "@clerk/clerk-js"). Mixing the two broke sign-in
+   * on the preview ("ClerkCtor is not a constructor", 2026-11-27): the
+   * script loaded fine, but `new window.Clerk(key)` is invalid. */
+  function loadSdk(key) {
     return new Promise(function (resolve, reject) {
       if (typeof document === "undefined") return reject(new Error("no document"));
       if (typeof window !== "undefined" && window.Clerk) return resolve(window.Clerk);
@@ -68,6 +76,7 @@
       s.src = CLERK_CDN;
       s.async = true;
       s.crossOrigin = "anonymous";
+      s.setAttribute("data-clerk-publishable-key", key);
       s.onload = function () { resolve(window.Clerk); };
       s.onerror = function () { reject(new Error("Clerk SDK failed to load from " + CLERK_CDN)); };
       document.head.appendChild(s);
@@ -95,8 +104,10 @@
     uiState = "loading";
     renderAuth();
     try {
-      var ClerkCtor = await loadSdk();
-      var clerk = new ClerkCtor(key);
+      var clerk = await loadSdk(key);
+      if (!clerk || typeof clerk.load !== "function") {
+        throw new Error("Clerk SDK loaded but window.Clerk has no load()");
+      }
       A._setClerk(clerk);
       await clerk.load();
       if (clerk.addListener) clerk.addListener(function () { A._syncUser(); });
