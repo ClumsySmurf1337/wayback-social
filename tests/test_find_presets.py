@@ -15,7 +15,7 @@ def test_presets():
 
 
 def test_find_offline(monkeypatch, tmp_path):
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.find as cli_mod
     rows = [["urlkey", "timestamp", "original", "mimetype", "statuscode",
              "digest", "length"],
             ["com,twitter)/jack/status/20", "20060321212430",
@@ -30,7 +30,7 @@ def test_find_offline(monkeypatch, tmp_path):
 
 
 def test_find_preset_prints_ethics(monkeypatch, tmp_path):
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.find as cli_mod
     monkeypatch.setattr(cli_mod, "query_many",
                         lambda patterns, **k: (_ for _ in ()).throw(
                             Exception("no network in test")))

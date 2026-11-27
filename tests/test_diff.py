@@ -86,7 +86,7 @@ def test_summarise():
 
 
 def test_diff_cli_offline(monkeypatch, tmp_path):
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.diff as cli_mod
     import wayback_social.diff as diff_mod
 
     rows = [["urlkey", "timestamp", "original", "mimetype", "statuscode",
@@ -115,9 +115,49 @@ def test_diff_cli_offline(monkeypatch, tmp_path):
                             "live_checked_at": "2026-11-26T00:00:00+00:00"})
     runner = CliRunner()
     res = runner.invoke(main, ["diff", "x", "jack", "--no-fetch-text",
-                               "--only", "deleted", "--out-dir", str(tmp_path)])
+                               "--only", "deleted", "--plan", "starter",
+                               "--out-dir", str(tmp_path)])
     assert res.exit_code == 0, res.output
     assert "deleted 1" in res.output
     assert "status/21" in res.output
     summaries = list(tmp_path.glob("diff_x_jack_summary.json"))
     assert summaries, res.output
+
+
+def test_diff_free_plan_refused_before_any_fetch(monkeypatch, tmp_path):
+    # B1: deleted_diff is false on free (pricing.yaml) — the CLI must
+    # refuse exactly like the web console, BEFORE touching the archive.
+    import wayback_social.commands.diff as cli_mod
+
+    def _must_not_run(*args, **kwargs):
+        raise AssertionError("CDX must not be queried on the free plan")
+
+    monkeypatch.setattr(cli_mod, "query_many", _must_not_run)
+    runner = CliRunner()
+    res = runner.invoke(main, ["diff", "x", "jack", "--no-fetch-text",
+                               "--out-dir", str(tmp_path)])
+    assert res.exit_code == 2, res.output
+    assert "Starter" in res.output
+    assert not list(tmp_path.glob("diff_x_jack_summary.json"))
+
+
+def test_diff_free_plan_still_compares_local_exports(tmp_path):
+    # The gate covers the live diff only. Comparing two exports the
+    # user already has needs no archive or live check, so it stays free.
+    import json
+
+    old = tmp_path / "old.json"
+    new = tmp_path / "new.json"
+    old.write_text(json.dumps([
+        {"post_id": "20", "original_post_url": "https://x.com/jack/status/20",
+         "archived_timestamp": "20060321212430"},
+        {"post_id": "21", "original_post_url": "https://x.com/jack/status/21",
+         "archived_timestamp": "20060322000000"}]), encoding="utf-8")
+    new.write_text(json.dumps([
+        {"post_id": "20", "original_post_url": "https://x.com/jack/status/20",
+         "archived_timestamp": "20060321212430"}]), encoding="utf-8")
+    runner = CliRunner()
+    res = runner.invoke(main, ["diff", str(old), str(new),
+                               "--out-dir", str(tmp_path)])
+    assert res.exit_code == 0, res.output
+    assert "removed 1" in res.output

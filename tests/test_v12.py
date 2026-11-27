@@ -74,6 +74,7 @@ def test_diff_exports_cli(tmp_path):
     new.write_text(json.dumps([]))
     runner = CliRunner()
     res = runner.invoke(main, ["diff", str(old), str(new), "--format", "json",
+                               "--plan", "starter",
                                "--out-dir", str(tmp_path)])
     assert res.exit_code == 0, res.output
     assert "removed 1" in res.output
@@ -144,7 +145,7 @@ def test_plan_caps():
 
 
 def test_archive_free_plan_caps_limit_offline(monkeypatch, tmp_path):
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.archive as cli_mod
 
     monkeypatch.setattr(cli_mod, "query_many", lambda patterns, **k: (ROWS, None))
     seen = {}
@@ -156,7 +157,7 @@ def test_archive_free_plan_caps_limit_offline(monkeypatch, tmp_path):
     monkeypatch.setattr(cli_mod, "query_many", spy)
     runner = CliRunner()
     res = runner.invoke(main, ["archive", "x", "jack", "--no-fetch-text",
-                               "--limit", "500", "--format", "json",
+                               "--limit", "500", "--format", "csv",
                                "--out-dir", str(tmp_path)])
     assert res.exit_code == 0, res.output
     assert seen["limit"] == 25  # free cap enforced
@@ -165,14 +166,15 @@ def test_archive_free_plan_caps_limit_offline(monkeypatch, tmp_path):
 
 
 def test_batch_free_plan_caps_targets_offline(monkeypatch, tmp_path):
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.batch as cli_mod
 
     monkeypatch.setattr(cli_mod, "query_many", lambda patterns, **k: (ROWS, None))
     targets = tmp_path / "t.txt"
     targets.write_text("\n".join(f"x u{i}" for i in range(5)))
     runner = CliRunner()
     res = runner.invoke(main, ["batch", str(targets), "--out-dir", str(tmp_path),
-                               "--format", "json", "--no-fetch-text"])
+                               "--format", "csv",
+                               "--no-fetch-text"])
     assert res.exit_code == 0, res.output
     summary = json.loads((tmp_path / "batch_summary.json").read_text())
     assert len(summary) == 3  # free cap: 3 targets
@@ -180,7 +182,7 @@ def test_batch_free_plan_caps_targets_offline(monkeypatch, tmp_path):
 
 
 def test_archive_live_check_offline(monkeypatch, tmp_path):
-    import wayback_social.cli as cli_mod
+    import wayback_social.commands.archive as cli_mod
     import wayback_social.diff as diff_mod
 
     monkeypatch.setattr(cli_mod, "query_many", lambda patterns, **k: (ROWS, None))
@@ -200,6 +202,7 @@ def test_archive_live_check_offline(monkeypatch, tmp_path):
     runner = CliRunner()
     res = runner.invoke(main, ["archive", "x", "jack", "--no-fetch-text",
                                "--live-check", "--format", "json",
+                               "--plan", "starter",
                                "--out-dir", str(tmp_path)])
     assert res.exit_code == 0, res.output
     assert "deleted 1" in res.output
