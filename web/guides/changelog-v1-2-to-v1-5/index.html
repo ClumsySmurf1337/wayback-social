@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static guide page. Like trust.html, this page is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. Canonical host follows
+  the site-wide convention (deletedproof.northforgelabs.dev); see
+  docs/canonical-decision.md — the retarget, if John picks it, must
+  cover these pages too. -->
+<title>Changelog v1.2–v1.5 — ArchiveCheck</title>
+<meta name="description" content="What shipped in ArchiveCheck v1.2 to v1.5: deleted-only diff, replay text, capped free tier, evidence packs, live checks, Arquivo, and the CDX proxy.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/guides/changelog-v1-2-to-v1-5/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="Changelog v1.2–v1.5 — ArchiveCheck">
+<meta property="og:description" content="What shipped in ArchiveCheck v1.2 to v1.5: deleted-only diff, replay text, capped free tier, evidence packs, live checks, Arquivo, and the CDX proxy.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/guides/changelog-v1-2-to-v1-5/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Changelog v1.2–v1.5 — ArchiveCheck">
+<meta name="twitter:description" content="What shipped in ArchiveCheck v1.2 to v1.5: deleted-only diff, replay text, capped free tier, evidence packs, live checks, Arquivo, and the CDX proxy.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Changelog v1.2–v1.5","description":"What shipped in ArchiveCheck v1.2 to v1.5: deleted-only diff, replay text, capped free tier, evidence packs, live checks, Arquivo, and the CDX proxy.","author":{"@type":"Organization","name":"ArchiveCheck"},"publisher":{"@type":"Organization","name":"ArchiveCheck"},"datePublished":"2026-11-27","dateModified":"2026-11-27","mainEntityOfPage":"https://deletedproof.northforgelabs.dev/guides/changelog-v1-2-to-v1-5/"}
+</script>
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}.card h3{margin:18px 0 6px}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+.warnbox{border-left:4px solid var(--warn);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.warnbox p{margin:6px 0}
+ul,ol{line-height:1.8;color:var(--text)}
+ul li::marker,ol li::marker{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+code{background:#0f1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Changelog <span>v1.2–v1.5</span></h1>
+  <p class="sub">Everything that shipped on 26 November 2026 — the day the tool went from a one-network script to a 14-network archive search with deleted diffs, evidence packs, and a web console.</p>
+  <p><a href="../../index.html">← Back to search</a> · <a href="../../dashboard.html">My dashboard</a> · <a href="index.html">All guides</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>v1.5 — live crawling, more archives, web tiers, CDX proxy</h2>
+    <ul>
+      <li><b>Live crawling:</b> Bluesky and Mastodon public APIs, YouTube oEmbed and channel RSS, X/TikTok oEmbed existence checks — the live half of the deleted diff. Reddit live is dead without OAuth, and stays labelled archive-only.</li>
+      <li><b>More archives:</b> Arquivo.pt full-text and CDX search, Ghostarchive result parsing with capture dates, MemGator multi-archive TimeMaps, Common Crawl as async jobs only (its index 504s too often for the live path).</li>
+      <li><b>Web tiers that work:</b> licence keys checked in the browser, per-tier caps enforced in the search, export formats gated by tier, and a dashboard with usage, history, and a licence box.</li>
+      <li><b>CDX proxy:</b> the live site's search used to fail on archive.org CORS and fall back to demo data. A Pages Function now proxies CDX same-origin — the search on the deployed site is real.</li>
+      <li><b>Analytics:</b> Cloudflare Web Analytics (free, cookieless) + a weekly SEO report format. Never tracks searched handles, results, or keys.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>v1.4 — live checks, Arquivo, evidence pack</h2>
+    <ul>
+      <li><b>Bluesky / Mastodon live checks</b> with feed-completeness verdicts, wired into the deleted diff.</li>
+      <li><b>Arquivo.pt keyword search</b> (Pro) and CDX mode — the one archive with real full-text search.</li>
+      <li><b>Evidence-pack ZIP</b> (Studio): report.html, captures, and a SHA-256 manifest. Two bugs found by live testing and fixed on the way: a Mastodon URL bug that faked a "deleted" verdict, and a README that pointed at the wrong manifest file.</li>
+      <li><b>Export-format gating</b> enforced: Free exports CSV only; Starter adds JSON; Pro adds JSONL/HTML; Studio adds the evidence pack.</li>
+      <li><b>Playwright end-to-end suite</b> added, run against the local site.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>v1.3 — pricing v1.3, licence keys</h2>
+    <ul>
+      <li><b>Studio is a finite pack:</b> 10 evidence-pack reports, batch 200, 25,000 captures per search, 10,000 text fetches, 5 seats. No tier is sold as uncapped — a test enforces it.</li>
+      <li><b>Launch vs regular pricing:</b> launch Starter $9 / Pro $19 / Studio $49 / Bundle $59; regular $19 / $29 / $99 / $147. Bundle math corrected — the v1.2 total was wrong ($137); the real regular total is $147, so the $59 launch bundle is 60% off.</li>
+      <li><b>Licence keys (v1):</b> offline-verifiable keys unlock tier caps in the tool. Production minting is Ed25519 via the Paddle webhook (built, awaiting the go-live steps).</li>
+      <li><b>Single source of truth:</b> pricing.yaml regenerates the caps in the tool and the prices on the site — they can no longer drift apart.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>v1.2 — deleted diff, replay text, capped free tier</h2>
+    <ul>
+      <li><b>Deleted-only diff, two ways:</b> compare two exports, or check a handle's captures live — live / deleted / unknown, with unknown never counted as deleted.</li>
+      <li><b>Replay text fetch:</b> post text pulled from the archived replay, after oEmbed and snapshot meta.</li>
+      <li><b>Archive fallback links</b> on every result (archive.today, Ghostarchive).</li>
+      <li><b>Capped free tier:</b> free 25 captures, 3 networks, 3 batch targets, text for 5 posts; caps printed on every run.</li>
+      <li><b>SEO + Cloudflare hosting:</b> title/meta/OG/JSON-LD, robots.txt, sitemap, the SEO check (12/12), and the Pages deployment.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Built, not yet live</h2>
+    <p>These are built and tested locally, but need human go-live steps before they work on the deployed site — so they are not promised as shipped:</p>
+    <ul>
+      <li><b>Sign-in (Clerk) + Turnstile bot check</b> — the app, keys, and database migration are human steps.</li>
+      <li><b>Paddle checkout → licence minting → email</b> — the webhook, Ed25519 minting, and Resend email are built; the Paddle account, products, and secrets are human steps, and the $1 sandbox purchase test is still to run.</li>
+      <li><b>Server-side evidence counting + Stripe billing portal (test mode)</b> — built; database migrations not yet applied live.</li>
+      <li><b>Per-subdomain branding + the guides on this page</b> — built locally, awaiting the batched push.</li>
+    </ul>
+    <div class="warnbox">
+      <p><b>Fresh-content note:</b> this changelog is a snapshot of 26–27 November 2026. The full, dated changelog lives in the repo (<code>CHANGELOG.md</code>); this page is updated when a release lands.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Related guides</h2>
+    <ul>
+      <li><a href="../find-deleted-tweets/index.html">How to find deleted tweets</a> — the search itself, step by step.</li>
+      <li><a href="../evidence-pack-for-lawyers/index.html">Evidence pack for lawyers</a> — what the v1.4 pack contains.</li>
+      <li><a href="../what-the-archive-cant-tell-you/index.html">What the archive can't tell you</a> — the limits page, in full.</li>
+    </ul>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.<br>Last updated 27 November 2026.</footer>
+<script src="../../config.js"></script>
+<script src="../../analytics.js"></script>
+</body>
+</html>
