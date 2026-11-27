@@ -153,16 +153,34 @@ def dedupe_latest(records: list[dict],
 
 def diff_records(records: list[dict], network_id: str = "",
                  workers: int = 5,
-                 require_post_id: bool = True) -> tuple[list[dict], int]:
+                 require_post_id: bool = True,
+                 live_ids: set | None = None,
+                 live_complete: bool = False) -> tuple[list[dict], int]:
     """Dedupe to latest capture per post, then classify each live URL
     (in parallel). Returns (rows in DIFF_FIELDS shape, newest first,
-    count of non-post rows skipped)."""
+    count of non-post rows skipped).
+
+    ``live_ids`` / ``live_complete`` override the per-URL HEAD check
+    for networks with a public live feed (Bluesky / Mastodon — see
+    live.py): a post in the live feed is live; a post missing from a
+    *complete* feed is deleted; missing from a truncated feed is
+    unknown. None (default) keeps the per-URL classify_live path.
+    """
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     rows, skipped = dedupe_latest(records, require_post_id=require_post_id)
+    checked_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     def _one(row):
-        info = classify_live(row["original_post_url"], network_id)
+        if live_ids is not None:
+            pid = row.get("post_id") or ""
+            verdict = ("live" if pid in live_ids
+                       else "deleted" if live_complete else "unknown")
+            info = {"live_verdict": verdict, "live_http_status": "",
+                    "live_final_url": row["original_post_url"],
+                    "live_checked_at": checked_at}
+        else:
+            info = classify_live(row["original_post_url"], network_id)
         out = {f: row.get(f, "") for f in DIFF_FIELDS}
         out.update(info)
         # Keep only the fields the export knows; drop the error note

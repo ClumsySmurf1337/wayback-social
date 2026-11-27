@@ -15,6 +15,50 @@ from datetime import datetime
 from pathlib import Path
 
 from .parse import FIELD_OPTIONS
+from .plans import PLAN_EXPORTS, PLAN_IDS
+
+# Minimum tier that unlocks each export format (pricing.yaml is the
+# source of truth; PLAN_EXPORTS is generated from it). Enforced here,
+# not just printed on the pricing page: Free = CSV only, Starter =
+# CSV + JSON, Pro/Studio = all formats. "all" is never an error — it
+# means "every format my plan allows" and notes what was skipped.
+_FORMAT_MIN_TIER = {"csv": "free", "json": "starter",
+                    "jsonl": "pro", "html": "pro"}
+_TIER_ORDER = {t: i for i, t in enumerate(PLAN_IDS)}
+
+
+class FormatNotAllowedError(ValueError):
+    """A requested export format needs a higher tier."""
+
+
+def allowed_formats(plan: str) -> list[str]:
+    return list(PLAN_EXPORTS[plan])
+
+
+def resolve_export_formats(plan: str, requested: list[str]) -> tuple[list[str], list[str]]:
+    """Resolve --format into the formats to write.
+
+    ``requested`` is the raw --format list (may contain "all").
+    Returns (formats_to_write, skipped_formats). An explicitly
+    requested format above the plan raises FormatNotAllowedError
+    naming the tier that unlocks it — exit code 2 at the CLI, with
+    CSV still offered. "all" just clamps to what the plan allows.
+    """
+    allowed = allowed_formats(plan)
+    if "all" in requested:
+        skipped = [f for f in ("csv", "json", "jsonl", "html")
+                   if f not in allowed]
+        return allowed, skipped
+    denied = [f for f in requested if f not in allowed]
+    if denied:
+        need = sorted({_FORMAT_MIN_TIER[f] for f in denied},
+                      key=lambda t: _TIER_ORDER[t])
+        raise FormatNotAllowedError(
+            f"Format(s) {', '.join(denied)} need the {need[0].title()} "
+            f"plan or higher (your plan: {plan}). CSV is included in "
+            f"every plan — use --format csv, or upgrade with "
+            f"--plan {need[0]} / a licence key.")
+    return list(requested), []
 
 
 def _stamp() -> str:

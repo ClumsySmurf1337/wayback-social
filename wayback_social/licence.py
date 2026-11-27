@@ -31,6 +31,7 @@ import os
 import secrets
 from pathlib import Path
 
+from . import licence2
 from .plans import PLAN_IDS
 
 KEY_PREFIX = "DP1"
@@ -101,13 +102,24 @@ def resolve_plan(plan: str, licence_key: str | None,
                  env: dict | None = None) -> tuple[str, str | None]:
     """Effective plan for a command.
 
-    No licence: the --plan value stands. With a licence: the key is
-    verified (needs the secret from env or ~/.config) and its tier
-    wins over --plan. Raises ValueError on a bad key or a missing
-    secret — the caller turns that into a usage error.
+    No licence: the --plan value stands. With a licence: DP2 keys
+    (Ed25519, production) verify offline against the baked-in public
+    key — no secret needed; DP1 keys (HMAC, dev) need the secret
+    from env or ~/.config. The key's tier wins over --plan.
+    Raises ValueError on a bad key or a missing secret — the caller
+    turns that into a usage error. Offline verification cannot know
+    about refunds/revocation; use /api/licence-check for that.
     """
     if not licence_key:
         return plan, None
+    if licence_key.strip().startswith(licence2.KEY_PREFIX + "-"):
+        valid, tier, reason = licence2.verify_key(licence_key)
+        if not valid:
+            raise ValueError(f"Invalid licence key: {reason}.")
+        note = (f"Licence verified: {tier} plan caps unlocked"
+                + (f" (overrides --plan {plan})" if tier != plan else "")
+                + " (offline check — revocation needs /api/licence-check).")
+        return tier, note
     secret = load_secret(env)
     if not secret:
         raise ValueError(
