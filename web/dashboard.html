@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — ArchiveCheck</title>
+<meta name="description" content="Your ArchiveCheck dashboard: tier, usage this month, search history and licence — all stored on this device, never uploaded.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/dashboard.html">
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#7c8cff;--accent2:#4ade80;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--accent)}header{max-width:1020px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:1020px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f1220;color:var(--text);font-size:16px}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:600}
+.btn{background:var(--accent);color:#fff}.btn2{background:transparent;color:var(--text);border:1px solid var(--line)}
+.pill{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted)}td a{word-break:break-all}
+.muted{color:var(--muted);font-size:14px}.stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0}
+.stats b{font-size:22px;display:block}
+footer{max-width:1020px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+<style>h1 span{color:var(--brand-accent,#1F9D63)}</style>
+<script src="branding.js"></script>
+</head>
+<body>
+<header>
+  <h1>My <span>dashboard</span></h1>
+  <p class="sub">Your tier, your usage, your history — stored on this device only (localStorage). Nothing here is uploaded, and nothing leaves the browser. <a href="index.html">← Back to search</a></p>
+  <p><span class="pill" id="tier-badge">Free tier</span></p>
+</header>
+<main>
+  <section class="card">
+    <h2 style="margin-top:0">Usage this month</h2>
+    <div class="stats" id="usage"></div>
+    <p class="muted" id="usage-note"></p>
+    <p class="muted" id="usage-server-note"></p>
+    <p><button class="btn2" id="log-evidence">Log an evidence-pack report I built</button>
+    <span class="muted">Evidence packs are built outside the browser — log them here by hand until the licence server syncs usage. Studio includes 10 reports.</span></p>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Licence</h2>
+    <label>Licence key (DP1-…)</label>
+    <input id="licence-key" placeholder="DP1-PRO-XXXXXXXXXXXXXXXX-xxxxxxxx" autocomplete="off">
+    <p><button class="btn" id="licence-verify">Verify key</button> <button class="btn2" id="licence-clear">Remove key</button></p>
+    <p id="licence-status" class="muted"></p>
+    <p class="muted"><b>Demo verification only:</b> keys tried here are checked locally against a public demo secret. A demo key is <b>not a purchase</b> and proves nothing about payment. Real licence keys are verified server-side and arrive by email after purchase. The key is never sent anywhere.</p>
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+    <h3 style="margin:0 0 8px">Billing</h3>
+    <p class="muted">Manage receipts and payment methods in the Stripe Billing Portal (test mode). It opens only if a Stripe customer is linked to this licence — otherwise you'll see why, not a dead link.</p>
+    <p><button class="btn2" id="billing-portal-go">Manage billing</button></p>
+    <p id="billing-portal-status" class="muted"></p>
+  </section>
+
+  <section class="card" id="account-card">
+    <h2 style="margin-top:0">My account</h2>
+    <p class="muted" id="account-status">Sign in to link a licence key to your account, so your tier follows you across devices. Signing in is optional — the free search and licence keys work without it.</p>
+    <p><span id="account-user"></span> <span id="account-actions"></span></p>
+    <div id="link-licence-box" hidden>
+      <label>Link a licence key to this account</label>
+      <input id="link-licence-key" placeholder="DP1-PRO-XXXXXXXXXXXXXXXX-xxxxxxxx" autocomplete="off">
+      <p><button class="btn" id="link-licence-go">Link key to my account</button></p>
+      <p id="link-licence-status" class="muted"></p>
+      <p class="muted" id="linked-tier"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Search history</h2>
+    <p class="muted">Latest 50 searches from this browser. Click a handle to search it again.</p>
+    <p><button class="btn2" id="clear-history">Clear history</button></p>
+    <div style="overflow-x:auto"><table id="history"><thead><tr><th>When</th><th>Network</th><th>Handle</th><th>Captures</th></tr></thead><tbody></tbody></table></div>
+    <p id="history-empty" class="muted">No searches yet on this device — <a href="index.html">run one</a>.</p>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Analytics — what we track</h2>
+    <p class="muted">Page views only, via Cloudflare Web Analytics (free, cookieless) when it is enabled — currently off. We <b>never</b> track searched handles, search results, or licence keys. Sales come from Paddle.</p>
+  </section>
+</main>
+<nav style="max-width:1020px;margin:0 auto;padding:8px 20px 0;color:var(--muted);font-size:13px"><a href="trust.html">Trust &amp; safety</a> · <a href="guides/index.html">Guides</a> · <a href="index.html">Search</a></nav>
+<footer>ArchiveCheck · Local-first dashboard. Your history stays on your device.</footer>
+
+<script src="config.js"></script>
+<script src="runtime-config.js"></script>
+<script src="analytics.js"></script>
+<script src="licence.js"></script>
+<script src="evidence-usage.js"></script>
+<script src="dashboard-server.js"></script>
+<script src="auth.js"></script>
+<script src="auth-ui.js"></script>
+<script>
+// Dashboard account card (auth.js / auth-ui.js must have loaded).
+// Signed out: shows Sign in / Sign up buttons. Signed in: shows the
+// user, the linked tier, and the link-a-key form. The link call goes
+// to /api/link-licence and is a no-op locally until Clerk + D1 are
+// configured (docs/clerk-auth.md) — the page says so honestly.
+(function () {
+  var A = window.WS_AUTH || null;
+  if (!A) return;
+  var $ = function (id) { return document.getElementById(id); };
+  function renderAccount() {
+    var st = A._state();
+    var box = $("link-licence-box");
+    var status = $("account-status");
+    var userEl = $("account-user");
+    var actionsEl = $("account-actions");
+    if (!st.user) {
+      if (status) status.textContent = "Not signed in. Sign in to link a licence key to your account, so your tier follows you across devices. Signing in is optional.";
+      if (userEl) userEl.textContent = "";
+      if (box) box.hidden = true;
+      if (actionsEl) {
+        actionsEl.innerHTML = '<button class="btn" id="account-signin">Sign in</button> <button class="btn2" id="account-signup">Sign up</button>';
+        var si = $("account-signin");
+        if (si) si.onclick = function () { A.openSignIn(); };
+        var su = $("account-signup");
+        if (su) su.onclick = function () { A.openSignUp(); };
+      }
+      return;
+    }
+    var label = A.userLabel() || "Signed in";
+    if (status) status.textContent = "Signed in — your linked licence (if any) unlocks your tier on every device.";
+    if (userEl) userEl.innerHTML = '<span class="pill good">' + label.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</span>";
+    if (actionsEl) {
+      actionsEl.innerHTML = '<button class="btn2" id="account-signout">Sign out</button>';
+      var so = $("account-signout");
+      if (so) so.onclick = function () { A.signOut().then(renderAccount); };
+    }
+    if (box) box.hidden = false;
+    var lt = $("linked-tier");
+    var linked = A.linkedTier();
+    if (lt) lt.textContent = linked
+      ? "Linked licence tier on this account: " + linked + "."
+      : "No licence linked to this account yet — link one below, or keep using a licence key on this device.";
+  }
+  A._onChange(renderAccount);
+  var go = $("link-licence-go");
+  if (go) go.onclick = async function () {
+    var key = $("link-licence-key").value;
+    var st = $("link-licence-status");
+    st.textContent = "Linking…";
+    var res = await A.linkLicence(key);
+    st.textContent = res.ok
+      ? "Linked — this account now has the " + res.tier + " tier."
+      : "Could not link: " + res.error;
+    renderAccount();
+  };
+  renderAccount();
+})();
+</script>
+<script>
+const LIC = window.WAYBACK_LICENCE;
+const cfg = window.WAYBACK_SOCIAL_CONFIG;
+const $ = id => document.getElementById(id);
+function monthKey(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
+function getTier(){ try { return localStorage.getItem("ws_licence_tier") || "free"; } catch(e){ return "free"; } }
+function getUsage(){
+  try { return JSON.parse(localStorage.getItem("ws_usage_" + monthKey()) || '{"searches":0}'); }
+  catch(e){ return {searches: 0}; }
+}
+function licenceKey(){
+  try { return localStorage.getItem("ws_licence") || ""; }
+  catch(e){ return ""; }
+}
+// Evidence reports used, counted per licence key (issue #15,
+// web/evidence-usage.js). Falls back to the old shared key if the
+// module failed to load; migrates a pre-#15 shared count once.
+function getEvidenceUsed(){
+  const EV = window.WS_EVIDENCE;
+  if (!EV) {
+    try { return parseInt(localStorage.getItem("ws_evidence_used") || "0", 10) || 0; }
+    catch(e){ return 0; }
+  }
+  EV.migrateLegacy(localStorage, licenceKey());
+  return EV.getUsed(localStorage, licenceKey());
+}
+// DEMO VERIFICATION ONLY (same lockdown as index.html): a key stored
+// here was checked locally against a public demo secret — it is NOT
+// a purchase. The badge and status say "demo key" whenever the
+// displayed tier comes from such a key (ws_licence_demo flag).
+function isDemoKey(tier){
+  try {
+    return localStorage.getItem("ws_licence_demo") === "1"
+      && localStorage.getItem("ws_licence_tier") === tier;
+  } catch(e){ return false; }
+}
+function render(){
+  const tier = getTier(), caps = LIC.planCaps(tier), u = getUsage(), ev = getEvidenceUsed();
+  $("tier-badge").textContent = `${LIC.tierLabel(tier)} tier${isDemoKey(tier) ? " (demo key)" : ""} — ${caps.archive_limit} captures/search, ${caps.find_networks} networks in broad search, ${caps.exports.join("/")} export`;
+  $("usage").innerHTML =
+    `<div><b>${u.searches || 0}</b>web searches this month</div>` +
+    `<div><b>${caps.archive_limit}</b>captures per search (cap)</div>` +
+    `<div><b>${ev} / ${caps.evidence_reports}</b>evidence-pack reports used</div>` +
+    `<div><b>${caps.seats}</b>seat(s)</div>`;
+  const EV = window.WS_EVIDENCE;
+  $("usage-note").textContent = EV
+    ? EV.statusLine(ev, caps.evidence_reports)
+    : (caps.evidence_reports
+      ? `Studio includes ${caps.evidence_reports} evidence-pack reports. Log each pack you build with the button above.`
+      : `Evidence packs are a Studio feature (${caps.evidence_reports} included there). Your tier: ${LIC.tierLabel(tier)}.`);
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem("ws_history") || "[]"); } catch(e) {}
+  const tb = document.querySelector("#history tbody");
+  tb.innerHTML = history.map(h =>
+    `<tr><td>${(h.at || "").slice(0, 10)} ${(h.at || "").slice(11, 16)}</td>` +
+    `<td>${h.network || ""}</td>` +
+    `<td><a href="index.html?network=${encodeURIComponent(h.network || "")}&handle=${encodeURIComponent(h.handle || "")}">${/^https?:\/\//.test(h.handle || "") ? (h.handle || "") : "@" + (h.handle || "")}</a></td>` +
+    `<td>${h.captures == null ? "—" : h.captures}</td></tr>`).join("");
+  $("history-empty").style.display = history.length ? "none" : "";
+  const lk = $("licence-key");
+  if (lk) {
+    try { lk.value = localStorage.getItem("ws_licence") || ""; } catch(e) {}
+    $("licence-status").textContent = tier === "free"
+      ? "No licence on this device — Free tier."
+      : isDemoKey(tier)
+        ? `Demo key active: ${LIC.tierLabel(tier)} tier preview (stored on this device). Not a purchase.`
+        : `Licence active: ${LIC.tierLabel(tier)} tier (stored on this device).`;
+  }
+  // Server usage (web/dashboard-server.js): patches the evidence
+  // stat to the honest combined count after every render, so a
+  // re-render never loses the server view.
+  if (window.WS_DASHBOARD_SERVER) window.WS_DASHBOARD_SERVER.applyServerUsage();
+}
+$("clear-history").onclick = () => {
+  try { localStorage.removeItem("ws_history"); } catch(e) {}
+  render();
+};
+$("log-evidence").onclick = () => {
+  const EV = window.WS_EVIDENCE;
+  const caps = LIC.planCaps(getTier());
+  if (!EV) { // module failed to load: old shared-key behaviour
+    try {
+      const n = getEvidenceUsed() + 1;
+      localStorage.setItem("ws_evidence_used", String(n));
+    } catch(e) {}
+    render();
+    return;
+  }
+  const res = EV.logReport(localStorage, licenceKey(), caps.evidence_reports);
+  render(); // render() resets the note to the plain status line first…
+  if (!res.ok) {
+    // …then the blocked log overwrites it with the top-up prompt.
+    // The link is static — no purchase is invented; checkout for
+    // extra reports opens with the Paddle go-live.
+    $("usage-note").innerHTML = res.reason +
+      ' <a href="index.html#pricing">See pricing &amp; the top-up</a> — extra reports open with checkout.';
+  }
+};
+$("licence-verify").onclick = async () => {
+  const key = $("licence-key").value.trim();
+  const st = $("licence-status");
+  if (!key) { st.textContent = "Paste a key first (DP1-…)."; return; }
+  st.textContent = "Checking key locally (demo verification)…";
+  try {
+    const res = await LIC.verifyKey(key, cfg.LICENCE && cfg.LICENCE.demo_secret);
+    if (!res.valid) { st.textContent = "Invalid key: " + res.reason; return; }
+    try {
+      localStorage.setItem("ws_licence", key);
+      localStorage.setItem("ws_licence_tier", res.tier);
+      localStorage.setItem("ws_licence_demo", "1"); // DEMO ONLY
+    } catch(e) {}
+    st.textContent = `Demo key accepted — ${LIC.tierLabel(res.tier)} tier preview unlocked on this device only. This is NOT a purchase: demo keys are checked locally against a public demo secret and prove nothing about payment. Real licence keys are verified server-side and arrive by email after purchase.`;
+    render();
+  } catch(e) { st.textContent = "Verification failed: " + e.message; }
+};
+$("licence-clear").onclick = () => {
+  try { localStorage.removeItem("ws_licence"); localStorage.removeItem("ws_licence_tier"); localStorage.removeItem("ws_licence_demo"); } catch(e) {}
+  $("licence-key").value = "";
+  $("licence-status").textContent = "Licence removed — back to the Free tier.";
+  render();
+};
+render();
+</script>
+</body>
+</html>
