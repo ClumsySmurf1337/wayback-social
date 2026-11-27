@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static copy uses the umbrella brand ArchiveCheck (docs/naming-v2.md).
+  This is a policy page, not a search surface: it is intentionally NOT
+  run through branding.js or the SSR middleware, so its title and
+  headings stay the same on every subdomain. -->
+<title>Trust &amp; safety — ArchiveCheck</title>
+<meta name="description" content="What ArchiveCheck does and doesn't do. Public archived posts only. No DMs, no location, no monitoring, no face recognition, no verdicts.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://deletedproof.northforgelabs.dev/trust.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ArchiveCheck">
+<meta property="og:title" content="Trust &amp; safety — ArchiveCheck">
+<meta property="og:description" content="What ArchiveCheck does and doesn't do. Public archived posts only. No DMs, no location, no monitoring, no face recognition, no verdicts.">
+<meta property="og:url" content="https://deletedproof.northforgelabs.dev/trust.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Trust &amp; safety — ArchiveCheck">
+<meta name="twitter:description" content="What ArchiveCheck does and doesn't do. Public archived posts only. No DMs, no location, no monitoring, no face recognition, no verdicts.">
+<style>
+:root{--bg:#0f1220;--card:#171b2e;--line:#2a3050;--text:#eef0ff;--muted:#9aa3c7;--accent:#1F9D63;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:#7c8cff}header{max-width:760px;margin:0 auto;padding:48px 20px 8px}
+h1{font-size:36px;margin:0 0 8px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:18px;max-width:640px}
+main{max-width:760px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.card h2{margin-top:0}
+.muted{color:var(--muted);font-size:14px}
+.limits{border-left:4px solid var(--accent);background:#0f1220;border-radius:10px;padding:12px 16px;margin:14px 0}
+.limits p{margin:6px 0}
+ul{line-height:1.8;color:var(--text)}
+ul li::marker{color:var(--accent)}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Trust &amp; <span>safety</span></h1>
+  <p class="sub">What ArchiveCheck does — and what it will never do.</p>
+  <p><a href="index.html">← Back to search</a> · <a href="dashboard.html">My dashboard</a></p>
+</header>
+<main>
+  <section class="card">
+    <h2>What this tool does</h2>
+    <p>ArchiveCheck searches <b>public archived posts</b> — posts that were published in public and captured by a web archive (the Wayback Machine, Arquivo.pt, Common Crawl, multi-archive TimeMaps) or that are still live on a public feed (Bluesky, Mastodon, YouTube). A match proves a public post existed on the date it was captured. Nothing more.</p>
+    <div class="limits">
+      <p><b>Found ≠ guilty. Not found ≠ not real.</b></p>
+      <p>A found post does not prove who wrote it, why it was deleted, or what happened off the public record. A post that isn't found may never have been archived, may have been posted under a different handle, or may simply not be saved anywhere yet.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What it never does</h2>
+    <ul>
+      <li><b>No private messages.</b> We cannot read DMs, private accounts, or anything behind a login — and we never ask for your login or anyone else's.</li>
+      <li><b>No account access.</b> No passwords, no sessions, no "log in as" anything. Searches use public archive data and public APIs only.</li>
+      <li><b>No location tracking.</b> We don't track where anyone is, has been, or lives.</li>
+      <li><b>No real-time monitoring or alerts.</b> We don't watch accounts, follow people, or notify you when someone posts. Every search is a one-off lookup you run yourself.</li>
+      <li><b>No face recognition or photo search.</b> The archives hold text and links, not biometric matching. Reverse-image-check a profile photo separately (Google Lens / TinEye) — that is outside this tool.</li>
+      <li><b>No verdicts or scores.</b> There is no "trust score", no "catfish probability", no guilty/not-guilty label. You see dated captures and decide for yourself.</li>
+      <li><b>No minors.</b> Do not use this tool to look up anyone under 18.</li>
+      <li><b>No harassment, stalking, or confrontation.</b> Do not use results to harass, stalk, threaten, or ambush someone. If you are checking a dating profile, check your own safety first — and if you feel unsafe, contact a local support helpline before anything else.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>FCRA disclaimer — not a consumer report</h2>
+    <p>ArchiveCheck is <b>not a consumer reporting agency</b> and its results are <b>not consumer reports</b> under the Fair Credit Reporting Act (FCRA) or any equivalent law.</p>
+    <p>Do <b>not</b> use ArchiveCheck for employment screening, tenant screening, credit decisions, insurance underwriting, or any other decision covered by the FCRA. Hiring use requires a compliant screening provider and the candidate's consent where the law requires it — an archive search is not a background check. Do not use protected characteristics (age, health, religion, race, and similar) found in archives in any decision.</p>
+  </section>
+
+  <section class="card">
+    <h2>For legal use — Triage, not court-ready</h2>
+    <p>Evidence packs preserve a dated, citable record: archived snapshot URL, capture timestamp, and digest, with a SHA-256 manifest. That is <b>Triage, not court-ready</b> evidence. Verify every snapshot yourself at web.archive.org before relying on it in a filing, and have counsel confirm what your jurisdiction requires.</p>
+  </section>
+
+  <section class="card">
+    <h2>Privacy — local-first</h2>
+    <ul>
+      <li>Searches run in your browser. Your licence key is stored <b>on your device only</b> and is never sent anywhere (demo keys are checked locally; real keys are verified server-side after purchase).</li>
+      <li>We <b>never log searched handles, search results, or licence keys</b>. Your search history and usage counts live in your browser's local storage.</li>
+      <li>Analytics is page views only, via Cloudflare Web Analytics (free, cookieless) when enabled. Sales come from our payment provider (Paddle).</li>
+      <li>Evidence packs you save are yours. Paid packs are stored for 12 months (free: 30 days), with a 30-day grace period after a refund, and deleted immediately on request.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Report abuse / request a takedown</h2>
+    <p>If this tool is being used to harass or stalk someone, or if you want a result about you removed from our pages, email <a href="mailto:sales@example.com">sales@example.com</a> with the archived link and what happened. We review reports by hand and act on them.</p>
+    <p class="muted">We cannot delete posts from the Wayback Machine or any other archive — those are run by their own operators. We can remove our own pages and links that point at them.</p>
+  </section>
+</main>
+<footer>ArchiveCheck · Research / OSINT tool. Public archived posts only. Found ≠ guilty. Not found ≠ not real.</footer>
+<script src="config.js"></script>
+<script src="analytics.js"></script>
+</body>
+</html>
