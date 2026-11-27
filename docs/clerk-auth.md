@@ -296,6 +296,18 @@ to Better Auth).
   strict-when-reachable test: if the SDK script returns 200, the
   auth area must render Sign in. The CSP must keep allowing the
   Clerk hosts — see `tests/test_csp.py`.
+- **Script mode needs TWO scripts (do not drop the second one):**
+  the SDK alone leaves `clerk.load()` degraded — the Sign in button
+  renders, but `openSignIn()` throws "Clerk was not loaded with Ui
+  components". `auth-ui.js` also loads `ui.browser.js` from the
+  Frontend API host (`https://<host>/npm/@clerk/ui@1/dist/
+  ui.browser.js`, host decoded from the publishable key) and passes
+  its `window.__internal_ClerkUICtor` to `clerk.load({ ui:
+  { ClerkUI } })`. The CSP must keep `*.clerk.accounts.dev` in
+  script-src for that bundle and its chunks. Any sign-in failure
+  now prints its reason on the page (auth-ui.js `authError`) instead
+  of failing silently — that is what finally surfaced the missing-UI
+  error on the 2026-11-27 preview check.
 
 ## 10. Dev/prod env swap + close-to-prod checklist
 
